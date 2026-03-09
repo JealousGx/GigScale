@@ -122,7 +122,7 @@ export default function RootLayout({
             <TooltipProvider>
               {children}
             </TooltipProvider>
-            <Toaster />
+            <Toaster richColors />
           </ThemeProvider>
         </QueryProvider>
       </body>
