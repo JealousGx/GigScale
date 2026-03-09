@@ -9,12 +9,14 @@ import {
   type LucideIcon,
   PenLine,
   Settings,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 
 import { dashboardNav } from "@/config/navigation";
 
@@ -38,6 +40,10 @@ export function Sidebar() {
   const user = session?.user ?? null;
 
   const setLoaded = useCreditsStore((s) => s.setLoaded);
+  const creditsTotal = useCreditsStore((s) => s.creditsTotal);
+  const creditsUsed = useCreditsStore((s) => s.creditsUsed);
+  const remaining = Math.max(0, creditsTotal - creditsUsed);
+  const usagePercent = creditsTotal > 0 ? (remaining / creditsTotal) * 100 : 0;
 
   const handleSignOut = async () => {
     setLoaded(false);
@@ -85,19 +91,40 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-border/50 p-3">
-        <div className="flex items-center gap-3 rounded-xl px-3 py-2.5">
-          <Avatar className="size-8">
-            <AvatarFallback className="bg-linear-to-br from-primary/20 to-secondary/20 text-xs font-medium">
-              {user?.name?.charAt(0) ?? "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 truncate">
-            <p className="truncate text-sm font-medium">{user?.name ?? "Guest User"}</p>
-            <p className="truncate text-xs text-muted-foreground">
-              {user?.email ?? "guest@gigscale.app"}
-            </p>
+      <div className="space-y-1 border-t border-border/50 p-3">
+        <div className="px-3 py-2.5">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Zap size={12} strokeWidth={2} className="text-primary" />
+              Credits
+            </span>
+            <span className="tabular-nums font-medium">
+              {remaining} / {creditsTotal}
+            </span>
           </div>
+          <Progress value={usagePercent} className="mt-2 h-1.5" />
+        </div>
+
+        <div className="flex items-center gap-3 rounded-xl px-3 py-2.5">
+          <Link
+            href="/dashboard/settings"
+            className="flex flex-1 items-center gap-3 truncate transition-opacity hover:opacity-80"
+          >
+            <Avatar className="size-8">
+              {user?.image && (
+                <AvatarImage src={user.image} alt={user.name ?? ""} />
+              )}
+              <AvatarFallback className="bg-linear-to-br from-primary/20 to-secondary/20 text-xs font-medium">
+                {user?.name?.charAt(0) ?? "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 truncate">
+              <p className="truncate text-sm font-medium">{user?.name ?? "Guest User"}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {user?.email ?? "guest@gigscale.app"}
+              </p>
+            </div>
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
