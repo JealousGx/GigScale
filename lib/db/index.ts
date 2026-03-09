@@ -1,3 +1,5 @@
+import "server-only";
+
 export * from "./schema";
 
 import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";

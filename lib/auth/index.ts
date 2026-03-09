@@ -1,3 +1,5 @@
+import "server-only";
+
 import {
   checkout,
   polar,
@@ -5,13 +7,13 @@ import {
   usage,
   webhooks,
 } from "@polar-sh/better-auth";
-import { Polar } from "@polar-sh/sdk";
 import { betterAuth, type GenericEndpointContext } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 
 import { sendAuthOTPEmail } from "@/lib/emails/auth-otp";
 import { env } from "@/lib/env";
+import { polarClient } from "@/lib/polar";
 import {
   handleOrderPaid,
   handleSubscriptionActive,
@@ -28,11 +30,6 @@ import { accountId, sessionId, userId, verificationId } from "../id";
 const OTP_LENGTH = 6;
 const OTP_EXPIRATION_SECONDS = 600;
 const ALLOWED_OTP_ATTEMPTS = 5;
-
-const polarClient = new Polar({
-  accessToken: env.POLAR_ACCESS_TOKEN,
-  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
-});
 
 export const auth = betterAuth({
   database: drizzleAdapter(getDb(), {
@@ -83,6 +80,12 @@ export const auth = betterAuth({
         usage(),
         webhooks({
           secret: env.POLAR_WEBHOOK_SECRET,
+          onPayload: async (payload) => {
+            console.log(
+              "[Polar Webhook] Received event:",
+              (payload as { type?: string }).type,
+            );
+          },
           onSubscriptionActive: handleSubscriptionActive,
           onSubscriptionCanceled: handleSubscriptionCanceled,
           onSubscriptionRevoked: handleSubscriptionRevoked,

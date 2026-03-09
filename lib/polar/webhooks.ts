@@ -19,119 +19,184 @@ function resolvePlanFromProductId(productId: string): PlanId {
   };
   return productToPlan[productId] ?? "pro";
 }
-export async function handleSubscriptionActive({
-  data,
-}: WebhookSubscriptionActivePayload) {
+
+function resolveUserId(
+  data: { customer: { externalId?: string | null } },
+  eventName: string,
+): string | null {
   const userId = data.customer.externalId;
   if (!userId) {
     console.error(
-      "[Polar Webhook] No externalId on customer — cannot map to user",
+      `[Polar Webhook] ${eventName}: No externalId on customer — cannot map to user. Customer:`,
+      JSON.stringify(data.customer),
     );
-    return;
+    return null;
   }
+  return userId;
+}
 
-  const plan = resolvePlanFromProductId(data.productId);
-  const planConfig = plans.find((p) => p.id === plan);
-  const creditsTotal = planConfig?.creditsPerMonth ?? 150;
+export async function handleSubscriptionActive({
+  data,
+}: WebhookSubscriptionActivePayload) {
+  const userId = resolveUserId(data, "subscription.active");
+  if (!userId) return;
 
-  await upsertSubscription(userId, {
-    plan,
-    status: "active",
-    creditsTotal,
-    creditsUsed: 0,
-    polarSubscriptionId: data.id,
-    currentPeriodStart: data.currentPeriodStart,
-    currentPeriodEnd: data.currentPeriodEnd,
-  });
+  try {
+    const plan = resolvePlanFromProductId(data.productId);
+    const planConfig = plans.find((p) => p.id === plan);
+    const creditsTotal = planConfig?.creditsPerMonth ?? 150;
 
-  console.log(
-    `[Polar Webhook] Subscription active: user=${userId} plan=${plan} credits=${creditsTotal}`,
-  );
+    await upsertSubscription(userId, {
+      plan,
+      status: "active",
+      creditsTotal,
+      creditsUsed: 0,
+      polarSubscriptionId: data.id,
+      currentPeriodStart: data.currentPeriodStart,
+      currentPeriodEnd: data.currentPeriodEnd,
+    });
+
+    console.log(
+      `[Polar Webhook] Subscription active: user=${userId} plan=${plan} credits=${creditsTotal}`,
+    );
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] subscription.active FAILED for user=${userId}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 export async function handleSubscriptionCanceled({
   data,
 }: WebhookSubscriptionCanceledPayload) {
-  const userId = data.customer.externalId;
+  const userId = resolveUserId(data, "subscription.canceled");
   if (!userId) return;
 
-  await updateSubscription(userId, { status: "cancelled" });
-
-  console.log(`[Polar Webhook] Subscription canceled: user=${userId}`);
+  try {
+    await updateSubscription(userId, { status: "cancelled" });
+    console.log(`[Polar Webhook] Subscription canceled: user=${userId}`);
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] subscription.canceled FAILED for user=${userId}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 export async function handleSubscriptionRevoked({
   data,
 }: WebhookSubscriptionRevokedPayload) {
-  const userId = data.customer.externalId;
+  const userId = resolveUserId(data, "subscription.revoked");
   if (!userId) return;
 
-  await updateSubscription(userId, {
-    status: "inactive",
-    plan: "free",
-    creditsTotal: 2,
-    creditsUsed: 0,
-    polarSubscriptionId: null,
-    currentPeriodStart: null,
-    currentPeriodEnd: null,
-  });
+  try {
+    await updateSubscription(userId, {
+      status: "inactive",
+      plan: "free",
+      creditsTotal: 2,
+      creditsUsed: 0,
+      polarSubscriptionId: null,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+    });
 
-  console.log(
-    `[Polar Webhook] Subscription revoked — downgraded to free: user=${userId}`,
-  );
+    console.log(
+      `[Polar Webhook] Subscription revoked — downgraded to free: user=${userId}`,
+    );
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] subscription.revoked FAILED for user=${userId}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 export async function handleSubscriptionUncanceled({
   data,
 }: WebhookSubscriptionUncanceledPayload) {
-  const userId = data.customer.externalId;
+  const userId = resolveUserId(data, "subscription.uncanceled");
   if (!userId) return;
 
-  await updateSubscription(userId, { status: "active" });
-
-  console.log(`[Polar Webhook] Subscription uncanceled: user=${userId}`);
+  try {
+    await updateSubscription(userId, { status: "active" });
+    console.log(`[Polar Webhook] Subscription uncanceled: user=${userId}`);
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] subscription.uncanceled FAILED for user=${userId}:`,
+      error,
+    );
+    throw error;
+  }
 }
 
 export async function handleSubscriptionUpdated({
   data,
 }: WebhookSubscriptionUpdatedPayload) {
-  const userId = data.customer.externalId;
+  const userId = resolveUserId(data, "subscription.updated");
   if (!userId) return;
 
-  const plan = resolvePlanFromProductId(data.productId);
-  const planConfig = plans.find((p) => p.id === plan);
-  const creditsTotal = planConfig?.creditsPerMonth ?? 150;
-
-  await updateSubscription(userId, {
-    plan,
-    creditsTotal,
-    polarSubscriptionId: data.id,
-    currentPeriodStart: data.currentPeriodStart,
-    currentPeriodEnd: data.currentPeriodEnd,
-  });
-
-  console.log(
-    `[Polar Webhook] Subscription updated: user=${userId} plan=${plan}`,
-  );
-}
-
-export async function handleOrderPaid({ data }: WebhookOrderPaidPayload) {
-  const userId = data.customer.externalId;
-  if (!userId) return;
-
-  if (data.subscription && data.productId) {
+  try {
     const plan = resolvePlanFromProductId(data.productId);
     const planConfig = plans.find((p) => p.id === plan);
     const creditsTotal = planConfig?.creditsPerMonth ?? 150;
 
-    await updateSubscription(userId, { creditsUsed: 0, creditsTotal });
+    await updateSubscription(userId, {
+      plan,
+      creditsTotal,
+      polarSubscriptionId: data.id,
+      currentPeriodStart: data.currentPeriodStart,
+      currentPeriodEnd: data.currentPeriodEnd,
+    });
 
     console.log(
-      `[Polar Webhook] Order paid (renewal) — credits reset: user=${userId} plan=${plan} credits=${creditsTotal}`,
+      `[Polar Webhook] Subscription updated: user=${userId} plan=${plan}`,
     );
-  } else {
-    console.log(
-      `[Polar Webhook] Order paid (one-time): user=${userId} order=${data.id}`,
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] subscription.updated FAILED for user=${userId}:`,
+      error,
     );
+    throw error;
+  }
+}
+
+export async function handleOrderPaid({ data }: WebhookOrderPaidPayload) {
+  const userId = resolveUserId(data, "order.paid");
+  if (!userId) return;
+
+  try {
+    if (data.subscription && data.productId) {
+      const plan = resolvePlanFromProductId(data.productId);
+      const planConfig = plans.find((p) => p.id === plan);
+      const creditsTotal = planConfig?.creditsPerMonth ?? 150;
+
+      await upsertSubscription(userId, {
+        plan,
+        status: "active",
+        creditsTotal,
+        creditsUsed: 0,
+        polarSubscriptionId: data.subscription.id,
+        currentPeriodStart: data.subscription.currentPeriodStart,
+        currentPeriodEnd: data.subscription.currentPeriodEnd,
+      });
+
+      console.log(
+        `[Polar Webhook] Order paid — credits synced: user=${userId} plan=${plan} credits=${creditsTotal}`,
+      );
+    } else {
+      console.log(
+        `[Polar Webhook] Order paid (one-time): user=${userId} order=${data.id}`,
+      );
+    }
+  } catch (error) {
+    console.error(
+      `[Polar Webhook] order.paid FAILED for user=${userId}:`,
+      error,
+    );
+    throw error;
   }
 }
