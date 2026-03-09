@@ -6,6 +6,7 @@ export interface Analysis {
   conversionScore: number;
   trustScore: number;
   completenessScore: number;
+  summary: string | null;
   createdAt: Date;
 }
 

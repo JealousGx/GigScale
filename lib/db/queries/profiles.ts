@@ -2,7 +2,7 @@ import "server-only";
 
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "..";
-import { profiles } from "../schema";
+import { type ProfileCrawlMeta, profiles } from "../schema";
 
 export async function insertProfile(data: {
   userId: string;
@@ -14,8 +14,12 @@ export async function insertProfile(data: {
   reviewCount?: number;
   portfolioCount?: number;
   profileAgeYears?: string;
+  crawlMeta?: ProfileCrawlMeta;
 }) {
-  const [row] = await getDb().insert(profiles).values(data).$returningId();
+  const [row] = await getDb()
+    .insert(profiles)
+    .values({ ...data, lastScannedAt: new Date() })
+    .$returningId();
   return findProfileById(row.id);
 }
 

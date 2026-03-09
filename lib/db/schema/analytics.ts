@@ -2,6 +2,7 @@ import {
   decimal,
   index,
   mysqlTable,
+  text,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -31,6 +32,7 @@ export const analyses = mysqlTable(
     completenessScore: decimal("completeness_score", { precision: 5, scale: 2 })
       .default("0")
       .notNull(),
+    summary: text("summary"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [

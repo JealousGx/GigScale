@@ -9,10 +9,6 @@ type BaseEmail = {
   from: string;
 };
 
-/**
- * Raw email (no template)
- * subject + html + text are REQUIRED
- */
 type RawEmail = BaseEmail & {
   template?: never;
   subject: string;
@@ -20,10 +16,6 @@ type RawEmail = BaseEmail & {
   text: string;
 };
 
-/**
- * Template-based email
- * subject/html/text are NOT needed
- */
 type TemplateEmail = BaseEmail & {
   template: {
     id: string;
@@ -41,27 +33,14 @@ export const sendEmail = async (data: SendEmailArgs) => {
 
   const { from, to, template, subject, html, text } = data;
 
-  if (template) {
-    await resend.emails
-      .send({
-        from,
-        to,
-        template,
-      })
-      .catch((error) => {
-        console.error("Failed to send email:", error);
-      });
-  } else {
-    await resend.emails
-      .send({
-        from,
-        to,
-        subject,
-        html,
-        text,
-      })
-      .catch((error) => {
-        console.error("Failed to send email:", error);
-      });
+  const payload = template
+    ? { from, to, template }
+    : { from, to, subject, html, text };
+
+  const { error } = await resend.emails.send(payload);
+
+  if (error) {
+    console.error("Failed to send email:", error);
+    throw new Error(`Email delivery failed: ${error.message}`);
   }
 };

@@ -6,6 +6,7 @@ interface CreditsStore {
   credits: number;
   creditsUsed: number;
   creditsTotal: number;
+  freeScansRemaining: number;
   isLoaded: boolean;
 
   setPlan: (plan: Plan) => void;
@@ -14,6 +15,7 @@ interface CreditsStore {
     credits: number;
     creditsUsed: number;
     creditsTotal: number;
+    freeScansRemaining?: number;
   }) => void;
   spendCredits: (amount: number) => void;
   setLoaded: (loaded: boolean) => void;
@@ -21,14 +23,22 @@ interface CreditsStore {
 
 export const useCreditsStore = create<CreditsStore>((set) => ({
   plan: "free",
-  credits: 2,
+  credits: 0,
   creditsUsed: 0,
-  creditsTotal: 2,
+  creditsTotal: 0,
+  freeScansRemaining: 1,
   isLoaded: false,
 
   setPlan: (plan) => set({ plan }),
-  setCredits: ({ plan, credits, creditsUsed, creditsTotal }) =>
-    set({ plan, credits, creditsUsed, creditsTotal, isLoaded: true }),
+  setCredits: ({ plan, credits, creditsUsed, creditsTotal, freeScansRemaining }) =>
+    set({
+      plan,
+      credits,
+      creditsUsed,
+      creditsTotal,
+      freeScansRemaining: freeScansRemaining ?? 0,
+      isLoaded: true,
+    }),
   spendCredits: (amount) =>
     set((s) => ({
       credits: Math.max(0, s.credits - amount),

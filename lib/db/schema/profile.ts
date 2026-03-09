@@ -2,6 +2,7 @@ import {
   decimal,
   index,
   int,
+  json,
   mysqlEnum,
   mysqlTable,
   text,
@@ -12,6 +13,14 @@ import {
 import { profileId } from "@/lib/id";
 
 import { users } from "./auth";
+
+export interface ProfileCrawlMeta {
+  skills: string[];
+  hourlyRate: string | null;
+  completedJobs: number | null;
+  memberSince: string | null;
+  location: string | null;
+}
 
 export const profiles = mysqlTable(
   "profiles",
@@ -32,6 +41,7 @@ export const profiles = mysqlTable(
     profileAgeYears: decimal("profile_age_years", { precision: 4, scale: 1 })
       .default("0")
       .notNull(),
+    crawlMeta: json("crawl_meta").$type<ProfileCrawlMeta>(),
     lastScannedAt: timestamp("last_scanned_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),

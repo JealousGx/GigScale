@@ -38,6 +38,13 @@ export const auth = betterAuth({
     usePlural: true,
   }),
 
+  session: {
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60,
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
   },
@@ -138,18 +145,6 @@ async function sendVerificationOTP(
   },
   _ctx?: GenericEndpointContext | undefined,
 ) {
-  const { email, otp, type } = data;
-  switch (type) {
-    case "sign-in":
-    case "email-verification": {
-      await sendAuthOTPEmail({ email, otp });
-      break;
-    }
-
-    default: {
-      throw new Error(
-        "Unsupported OTP type. Only 'sign-in', 'email-verification', 'forget-password', and 'change-email' are supported.",
-      );
-    }
-  }
+  const { email, otp } = data;
+  await sendAuthOTPEmail({ email, otp });
 }

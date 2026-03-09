@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 
 export { analyses } from "./analytics";
 export { accounts, sessions, users, verifications } from "./auth";
-export { profiles } from "./profile";
+export { profiles, type ProfileCrawlMeta } from "./profile";
 export { rewrites } from "./rewrite";
 export { subscriptions } from "./subscription";
 export { suggestions } from "./suggestion";

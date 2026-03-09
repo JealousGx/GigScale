@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { TimeoutError } from "@/lib/utils/timeout";
+
 export function ok<T>(data: T, status = 200) {
   return NextResponse.json(data, { status });
 }
@@ -26,4 +28,15 @@ export function notFound(message = "Not found") {
 
 export function serverError(message = "Internal server error") {
   return NextResponse.json({ error: message }, { status: 500 });
+}
+
+export function handleRouteError(error: unknown, logPrefix: string) {
+  console.error(logPrefix, error);
+  if (error instanceof TimeoutError) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 504 },
+    );
+  }
+  return serverError();
 }
