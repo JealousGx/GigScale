@@ -21,17 +21,20 @@ export const env = createEnv({
     R2_PUBLIC_URL: z.url(),
     FIRECRAWL_API_KEY: z.string().min(1),
     GEMINI_API_KEY: z.string().min(1),
+    DISCORD_BUG_REPORT_WEBHOOK_URL: z.url(),
   },
 
   client: {
     NEXT_PUBLIC_APP_URL: z.url(),
     NEXT_PUBLIC_SUPPORT_EMAIL: z.email(),
     NEXT_PUBLIC_SALES_EMAIL: z.email(),
+    NEXT_PUBLIC_FEATUREBASE_URL: z.url(),
   },
 
   experimental__runtimeEnv: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SUPPORT_EMAIL: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
     NEXT_PUBLIC_SALES_EMAIL: process.env.NEXT_PUBLIC_SALES_EMAIL,
+    NEXT_PUBLIC_FEATUREBASE_URL: process.env.NEXT_PUBLIC_FEATUREBASE_URL,
   },
 });
