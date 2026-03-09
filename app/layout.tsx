@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Figtree, Geist_Mono } from "next/font/google";
 
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { CookieConsent } from "@/components/shared/CookieConsent";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -116,6 +117,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("font-sans", figtree.variable)} suppressHydrationWarning>
+      <head>
+        <script src="/theme-init.js" />
+      </head>
       <body className={cn(geistMono.variable, "antialiased")}>
         <QueryProvider>
           <ThemeProvider>
@@ -123,6 +127,7 @@ export default function RootLayout({
               {children}
             </TooltipProvider>
             <Toaster richColors />
+            <CookieConsent />
           </ThemeProvider>
         </QueryProvider>
       </body>
