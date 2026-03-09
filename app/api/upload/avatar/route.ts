@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
     if (file.size > MAX_SIZE) {
-      return badRequest("File too large. Maximum 10MB.");
+      return badRequest("File too large. Maximum 1MB.");
     }
 
     const rawBuffer = Buffer.from(await file.arrayBuffer());
