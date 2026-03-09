@@ -1,13 +1,23 @@
 import { apiClient } from "./apiClient";
-import type { Analysis } from "@/types";
+import type { Analysis, Profile } from "@/types";
+
+export interface LatestAnalysisResponse {
+  analysis: Analysis;
+  previousAnalysis: Analysis | null;
+}
+
+export interface AnalysisHistoryEntry {
+  analysis: Analysis;
+  profile: Profile;
+}
 
 export const analysisService = {
   getByProfileId: (profileId: string) =>
     apiClient.get<Analysis>(`/analyses/${profileId}`),
 
   getLatest: () =>
-    apiClient.get<Analysis>("/analyses/latest"),
+    apiClient.get<LatestAnalysisResponse>("/analyses/latest"),
 
   getHistory: () =>
-    apiClient.get<Analysis[]>("/analyses/history"),
+    apiClient.get<AnalysisHistoryEntry[]>("/analyses/history"),
 };
