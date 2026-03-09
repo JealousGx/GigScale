@@ -31,7 +31,7 @@ const ALLOWED_OTP_ATTEMPTS = 5;
 
 const polarClient = new Polar({
   accessToken: env.POLAR_ACCESS_TOKEN,
-  server: "production",
+  server: process.env.NODE_ENV === "production" ? "production" : "sandbox",
 });
 
 export const auth = betterAuth({
