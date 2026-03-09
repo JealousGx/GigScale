@@ -19,6 +19,7 @@ export const env = createEnv({
     R2_SECRET_ACCESS_KEY: z.string().min(1),
     R2_BUCKET: z.string().min(1),
     R2_PUBLIC_URL: z.url(),
+    FIRECRAWL_API_KEY: z.string().min(1),
   },
 
   client: {
