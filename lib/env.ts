@@ -13,6 +13,9 @@ export const env = createEnv({
     POLAR_PRO_PRODUCT_ID: z.string().min(1),
     POLAR_ENTERPRISE_PRODUCT_ID: z.string().min(1),
     POLAR_WEBHOOK_SECRET: z.string().min(1),
+    POLAR_SERVER: z
+      .enum(["production", "sandbox"])
+      .default("sandbox"),
   },
 
   client: {
