@@ -20,6 +20,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { FeedbackButton } from "@/components/shared/FeedbackButton";
 import { Button } from "@/components/ui/button";
 import { Link as CustomLink } from "@/components/ui/link";
 
@@ -486,12 +487,29 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/30 py-12">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
             <BrandLogo size="sm" withText />
-            <p className="text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} {siteConfig.name}. All rights
-              reserved.
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <a href="/privacy" className="transition-colors hover:text-foreground">
+                Privacy
+              </a>
+              <a href="/terms" className="transition-colors hover:text-foreground">
+                Terms
+              </a>
+              <a href="/disclaimer" className="transition-colors hover:text-foreground">
+                Disclaimer
+              </a>
+              <a href="/billing-policy" className="transition-colors hover:text-foreground">
+                Billing &amp; Credits
+              </a>
+              <a href="/refund-policy" className="transition-colors hover:text-foreground">
+                Refunds
+              </a>
+              <FeedbackButton />
+              <span>
+                &copy; {new Date().getFullYear()} {siteConfig.name}
+              </span>
+            </div>
           </div>
         </div>
       </footer>

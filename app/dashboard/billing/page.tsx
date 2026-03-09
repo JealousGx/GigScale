@@ -16,7 +16,7 @@ export default function BillingPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Billing</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Manage your plan, credits, and subscription
+          Manage your plan and credits
         </p>
       </div>
 
@@ -40,6 +40,18 @@ export default function BillingPage() {
             />
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <a href="/billing-policy" className="transition-colors hover:text-foreground">
+          Billing &amp; Credits Policy
+        </a>
+        <a href="/refund-policy" className="transition-colors hover:text-foreground">
+          Refund Policy
+        </a>
+        <a href="/terms" className="transition-colors hover:text-foreground">
+          Terms of Service
+        </a>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ export const siteConfig = {
   url: env.NEXT_PUBLIC_APP_URL,
   supportEmail: env.NEXT_PUBLIC_SUPPORT_EMAIL,
   locale: "en_US",
-  creator: "GigScale",
+  creator: "JealousGx",
   keywords: [
     "freelancer",
     "profile optimization",

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { GoogleIcon } from "@/components/icons/google";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +27,9 @@ type AuthMethod =
   | "otp-send"
   | "otp-verify"
   | "password-login"
-  | "password-signup";
+  | "password-signup"
+  | "forgot-send"
+  | "forgot-reset";
 
 interface AuthModalProps {
   open: boolean;
@@ -55,8 +58,11 @@ export function AuthModal({
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const otpSlotIds = useRef(
     Array.from({ length: 6 }, (_, i) => `otp-slot-${i}`),
@@ -65,8 +71,11 @@ export function AuthModal({
   const resetForm = useCallback(() => {
     setEmail("");
     setPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
     setName("");
     setOtp(["", "", "", "", "", ""]);
+    setTermsAccepted(false);
     setError(null);
     setIsLoading(false);
   }, []);
@@ -89,6 +98,11 @@ export function AuthModal({
     if (method === "otp-verify") {
       setOtp(["", "", "", "", "", ""]);
       navigate("otp-send", -1);
+    } else if (method === "forgot-reset") {
+      setOtp(["", "", "", "", "", ""]);
+      navigate("forgot-send", -1);
+    } else if (method === "forgot-send") {
+      navigate("password-login", -1);
     } else {
       navigate("select", -1);
     }
@@ -203,6 +217,58 @@ export function AuthModal({
     }
   };
 
+  // --- Forgot Password ---
+  const handleForgotSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { error: otpError } = await authClient.emailOtp.requestPasswordReset({
+        email,
+      });
+      if (otpError) {
+        setError(otpError.message ?? "Failed to send reset code.");
+      } else {
+        navigate("forgot-reset", 1);
+        setTimeout(() => otpRefs.current[0]?.focus(), 150);
+      }
+    } catch {
+      setError("Failed to send reset code. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const code = otp.join("");
+    if (code.length !== 6) return;
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { error: resetError } = await authClient.emailOtp.resetPassword({
+        email,
+        otp: code,
+        password: newPassword,
+      });
+      if (resetError) {
+        setError(resetError.message ?? "Failed to reset password.");
+      } else {
+        setError(null);
+        navigate("password-login", -1);
+        resetForm();
+      }
+    } catch {
+      setError("Failed to reset password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // --- Password ---
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,6 +316,8 @@ export function AuthModal({
     "otp-verify": "Check your email",
     "password-login": "Sign in with password",
     "password-signup": "Create your account",
+    "forgot-send": "Reset your password",
+    "forgot-reset": "Set new password",
   };
 
   const description: Record<AuthMethod, string> = {
@@ -258,6 +326,8 @@ export function AuthModal({
     "otp-verify": `Enter the code sent to ${email}`,
     "password-login": `Sign in to ${siteConfig.name}`,
     "password-signup": `Start using ${siteConfig.name} today`,
+    "forgot-send": "We\u2019ll send a reset code to your email",
+    "forgot-reset": `Enter the code sent to ${email} and your new password`,
   };
 
   const showBack = method !== "select";
@@ -331,7 +401,7 @@ export function AuthModal({
                   variant="outline"
                   className="w-full justify-center gap-3 rounded-xl"
                   onClick={handleGoogle}
-                  disabled={isLoading}
+                  disabled={isLoading || !termsAccepted}
                 >
                   <GoogleIcon className="size-5" />
                   Continue with Google
@@ -347,6 +417,7 @@ export function AuthModal({
                   variant="outline"
                   className="w-full justify-center gap-3 rounded-xl"
                   onClick={() => navigate("otp-send", 1)}
+                  disabled={!termsAccepted}
                 >
                   <Mail size={16} strokeWidth={1.5} />
                   Continue with email code
@@ -361,10 +432,45 @@ export function AuthModal({
                       1,
                     )
                   }
+                  disabled={!termsAccepted}
                 >
                   <Lock size={16} strokeWidth={1.5} />
                   Continue with password
                 </Button>
+
+                <div className="flex items-start gap-2 pt-1">
+                  <Checkbox
+                    id="terms-accept"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) =>
+                      setTermsAccepted(checked === true)
+                    }
+                    className="mt-0.5"
+                  />
+                  <label
+                    htmlFor="terms-accept"
+                    className="text-xs leading-relaxed text-muted-foreground"
+                  >
+                    I agree to the{" "}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
               </div>
             )}
 
@@ -473,7 +579,16 @@ export function AuthModal({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="pw-password">Password</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="pw-password">Password</Label>
+                    <button
+                      type="button"
+                      onClick={() => navigate("forgot-send", 1)}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
                   <Input
                     id="pw-password"
                     type="password"
@@ -570,6 +685,107 @@ export function AuthModal({
                     Sign in
                   </button>
                 </p>
+              </form>
+            )}
+            {/* === Forgot: Send OTP === */}
+            {method === "forgot-send" && (
+              <form onSubmit={handleForgotSendOtp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">Email address</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <Button type="submit" className="w-full rounded-xl" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Sending code...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={16} />
+                      Send reset code
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
+
+            {/* === Forgot: OTP + New Password === */}
+            {method === "forgot-reset" && (
+              <form onSubmit={handleResetPassword} className="space-y-4">
+                <div className="space-y-3">
+                  <Label>Reset code</Label>
+                  <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                    {otp.map((digit, i) => (
+                      <input
+                        key={otpSlotIds[i]}
+                        ref={(el) => {
+                          otpRefs.current[i] = el;
+                        }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(i, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                        className={cn(
+                          "flex size-11 items-center justify-center rounded-xl border border-border/60 bg-muted/20 text-center text-lg font-semibold tabular-nums outline-none transition-all",
+                          "focus:border-primary/50 focus:ring-2 focus:ring-primary/20",
+                        )}
+                        autoFocus={i === 0}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-pw">New password</Label>
+                  <Input
+                    id="new-pw"
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-pw">Confirm password</Label>
+                  <Input
+                    id="confirm-pw"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={8}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full rounded-xl"
+                  disabled={isLoading || otp.join("").length !== 6}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={16} />
+                      Reset password
+                    </>
+                  )}
+                </Button>
               </form>
             )}
           </motion.div>

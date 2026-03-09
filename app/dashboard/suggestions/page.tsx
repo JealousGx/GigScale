@@ -11,7 +11,8 @@ import { useSuggestions } from "@/features/suggestions/hooks/useSuggestions";
 import { PRIORITY_CONFIG } from "@/features/suggestions/types/suggestionsTypes";
 
 export default function SuggestionsPage() {
-  const { data: latestAnalysis, isLoading: analysisLoading } = useLatestAnalysis();
+  const { data: latestData, isLoading: analysisLoading } = useLatestAnalysis();
+  const latestAnalysis = latestData?.analysis ?? null;
   const analysisId = latestAnalysis?.id;
   const { suggestions, isLoading, error, generateSuggestions } = useSuggestions(analysisId);
 

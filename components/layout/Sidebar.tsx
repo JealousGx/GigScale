@@ -15,10 +15,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
+import { FeedbackButton } from "@/components/shared/FeedbackButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 
 import { dashboardNav } from "@/config/navigation";
+
+import { useQueryClient } from "@tanstack/react-query";
 
 import { signOut, useSession } from "@/lib/auth/client";
 import { useCreditsStore } from "@/lib/stores";
@@ -39,6 +42,7 @@ export function Sidebar() {
   const { data: session } = useSession();
   const user = session?.user ?? null;
 
+  const queryClient = useQueryClient();
   const setLoaded = useCreditsStore((s) => s.setLoaded);
   const creditsTotal = useCreditsStore((s) => s.creditsTotal);
   const creditsUsed = useCreditsStore((s) => s.creditsUsed);
@@ -47,7 +51,14 @@ export function Sidebar() {
 
   const handleSignOut = async () => {
     setLoaded(false);
-    await signOut({ fetchOptions: { onSuccess: () => router.replace("/") } });
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          queryClient.clear();
+          router.replace("/");
+        },
+      },
+    });
   };
 
   return (
@@ -92,6 +103,9 @@ export function Sidebar() {
       </nav>
 
       <div className="space-y-1 border-t border-border/50 p-3">
+        <div className="flex items-center justify-between px-3 pb-1">
+          <FeedbackButton />
+        </div>
         <div className="px-3 py-2.5">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">

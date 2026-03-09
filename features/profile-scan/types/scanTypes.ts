@@ -8,6 +8,7 @@ export interface ScanFormData {
 export interface ScanResult {
   profile: Profile;
   analysis: Analysis;
+  previousAnalysis?: Analysis | null;
 }
 
 export type ScanStatus = "idle" | "scanning" | "complete" | "error";

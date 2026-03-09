@@ -30,7 +30,7 @@ export function SubscriptionStatus() {
           )}
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {planDetails?.creditsPerMonth} credits / month
+          {planDetails?.creditsPerMonth} credits
         </p>
       </div>
 
@@ -38,7 +38,7 @@ export function SubscriptionStatus() {
         {plan !== "free" ? (
           <CustomLink href="/dashboard/billing/manage" variant="outline" size="sm" className="w-full rounded-xl">
             <Sparkles size={14} strokeWidth={1.5} />
-            Manage Subscription
+            Manage Plan
             <ExternalLink size={12} strokeWidth={1.5} className="ml-auto opacity-50" />
           </CustomLink>
         ) : (

@@ -11,6 +11,7 @@ export function useSuggestions(analysisId: string | undefined) {
   const query = useQuery<Suggestion[]>({
     queryKey: queryKeys.suggestions.byAnalysis(analysisId!),
     queryFn: () => featureSuggestionsService.getByAnalysis(analysisId!),
+    staleTime: 10 * 60_000,
     enabled: !!analysisId,
   });
 

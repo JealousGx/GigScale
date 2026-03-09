@@ -129,8 +129,8 @@ export default function CheckoutSuccessPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35, duration: 0.4 }}
         >
-          Your subscription is now active. Start using your credits to scan
-          profiles, generate rewrites, and more.
+          Your credits have been added. Start scanning profiles, generating
+          rewrites, and more.
         </motion.p>
 
         <motion.div

@@ -1,46 +1,56 @@
 "use client";
 
-import type { Analysis, Profile } from "@/types";
-import { ScoreRing } from "./ScoreRing";
-import { ScoreBreakdown } from "./ScoreBreakdown";
-import { Eye, TrendingUp, ShieldCheck, ClipboardCheck, type LucideIcon } from "lucide-react";
+import { ClipboardCheck, Eye, type LucideIcon, ShieldCheck, TrendingUp } from "lucide-react";
+
+import { ScoreDelta } from "@/components/shared/ScoreDelta";
+
 import { cn } from "@/lib/utils";
-import { getScoreColor, getScoreBg } from "../utils/scanHelpers";
+import type { Analysis, Profile } from "@/types";
+
+import { getScoreBg, getScoreColor } from "../utils/scanHelpers";
+import { ScoreBreakdown } from "./ScoreBreakdown";
+import { ScoreRing } from "./ScoreRing";
 
 interface ScanResultsProps {
   profile: Profile;
   analysis: Analysis;
+  previousAnalysis?: Analysis | null;
 }
 
 interface Metric {
   label: string;
+  key: keyof Analysis;
   score: number;
   icon: LucideIcon;
   description: string;
 }
 
-export function ScanResults({ profile, analysis }: ScanResultsProps) {
+export function ScanResults({ profile, analysis, previousAnalysis }: ScanResultsProps) {
   const metrics: Metric[] = [
     {
       label: "Visibility",
+      key: "visibilityScore",
       score: analysis.visibilityScore,
       icon: Eye,
       description: "How easily clients find your profile",
     },
     {
       label: "Conversion",
+      key: "conversionScore",
       score: analysis.conversionScore,
       icon: TrendingUp,
       description: "How well your profile converts visitors",
     },
     {
       label: "Trust",
+      key: "trustScore",
       score: analysis.trustScore,
       icon: ShieldCheck,
       description: "Client confidence signals",
     },
     {
       label: "Completeness",
+      key: "completenessScore",
       score: analysis.completenessScore,
       icon: ClipboardCheck,
       description: "Profile information coverage",
@@ -72,14 +82,30 @@ export function ScanResults({ profile, analysis }: ScanResultsProps) {
         </h2>
       </div>
 
-      <div className="flex justify-center">
+      <div className="flex flex-col items-center gap-2">
         <ScoreRing
           score={analysis.profileScore}
           size={160}
           strokeWidth={10}
           label="Profile Score"
         />
+        {previousAnalysis && (
+          <ScoreDelta
+            current={analysis.profileScore}
+            previous={previousAnalysis.profileScore}
+            className="text-sm"
+          />
+        )}
       </div>
+
+      {analysis.summary && (
+        <div className="rounded-2xl border border-border/40 bg-muted/10 px-6 py-5">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            AI Analysis
+          </p>
+          <p className="text-sm leading-relaxed text-foreground/90">{analysis.summary}</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/40 bg-border/40 md:grid-cols-4">
         {metrics.map((metric) => {
@@ -97,9 +123,17 @@ export function ScanResults({ profile, analysis }: ScanResultsProps) {
                 />
               </div>
               <div className="text-center">
-                <p className={cn("text-2xl font-bold tabular-nums", getScoreColor(metric.score))}>
-                  {metric.score}
-                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                  <p className={cn("text-2xl font-bold tabular-nums", getScoreColor(metric.score))}>
+                    {metric.score}
+                  </p>
+                  {previousAnalysis && (
+                    <ScoreDelta
+                      current={metric.score}
+                      previous={Number(previousAnalysis[metric.key]) || 0}
+                    />
+                  )}
+                </div>
                 <p className="mt-0.5 text-sm font-medium">{metric.label}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">{metric.description}</p>
               </div>

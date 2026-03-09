@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Gift, Loader2, Search } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Search, Loader2 } from "lucide-react";
-import { detectPlatform } from "../utils/scanHelpers";
+import { useCreditsStore } from "@/lib/stores";
+
 import type { ScanStatus } from "../types/scanTypes";
+import { detectPlatform } from "../utils/scanHelpers";
 
 interface ScanInputProps {
   onScan: (url: string, platform: "upwork" | "fiverr") => void;
@@ -14,6 +17,7 @@ interface ScanInputProps {
 export function ScanInput({ onScan, status }: ScanInputProps) {
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const freeScansRemaining = useCreditsStore((s) => s.freeScansRemaining);
 
   const handleScan = () => {
     const platform = detectPlatform(url);
@@ -77,6 +81,12 @@ export function ScanInput({ onScan, status }: ScanInputProps) {
       )}
 
       <div className="flex items-center gap-6 pt-1">
+        {freeScansRemaining > 0 && (
+          <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <Gift size={12} />
+            First scan free — no credits needed
+          </div>
+        )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="inline-block size-2 rounded-full bg-chart-1" />
           Upwork supported

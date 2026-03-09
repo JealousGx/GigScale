@@ -53,6 +53,7 @@ export function useRewriteHistory(profileId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.rewrites.byProfile(profileId!),
     queryFn: () => featureRewriteService.getHistory(profileId!),
+    staleTime: 5 * 60_000,
     enabled: !!profileId,
   });
 }

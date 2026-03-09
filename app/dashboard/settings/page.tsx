@@ -434,6 +434,12 @@ export default function SettingsPage() {
             Delete
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          By using this service you agree to our{" "}
+          <a href="/terms" className="text-primary hover:underline">Terms</a>,{" "}
+          <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>, and{" "}
+          <a href="/refund-policy" className="text-primary hover:underline">Refund Policy</a>.
+        </p>
       </section>
     </div>
   );

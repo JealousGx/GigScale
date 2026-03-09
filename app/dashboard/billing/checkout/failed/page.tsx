@@ -6,6 +6,8 @@ import { useSearchParams } from "next/navigation";
 
 import { Link as CustomLink } from "@/components/ui/link";
 
+import { siteConfig } from "@/config/site";
+
 const ERROR_MESSAGES: Record<string, string> = {
   cancelled: "You cancelled the checkout before completing payment.",
   expired: "Your checkout session expired. Please try again.",
@@ -109,6 +111,18 @@ export default function CheckoutFailedPage() {
             Dashboard
           </CustomLink>
         </motion.div>
+
+        <motion.p
+          className="mt-6 text-xs text-muted-foreground"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.3 }}
+        >
+          Charged but didn&apos;t receive credits?{" "}
+          <a href={`mailto:${siteConfig.supportEmail}`} className="text-primary hover:underline">
+            Contact support
+          </a>
+        </motion.p>
       </motion.div>
     </div>
   );
