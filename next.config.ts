@@ -5,7 +5,12 @@ import "./lib/env";
 const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
-    domains: ["assets.gigscale.app"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "assets.gigscale.app",
+      },
+    ],
   },
 };
 
