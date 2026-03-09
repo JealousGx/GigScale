@@ -11,6 +11,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 
 import { sendAuthOTPEmail } from "@/lib/emails/auth-otp";
+import { env } from "@/lib/env";
 import {
   handleOrderPaid,
   handleSubscriptionActive,
@@ -29,9 +30,8 @@ const OTP_EXPIRATION_SECONDS = 600;
 const ALLOWED_OTP_ATTEMPTS = 5;
 
 const polarClient = new Polar({
-  accessToken: process.env.POLAR_ACCESS_TOKEN!,
-  server:
-    (process.env.POLAR_ENVIRONMENT as "sandbox" | "production") ?? "sandbox",
+  accessToken: env.POLAR_ACCESS_TOKEN,
+  server: "production",
 });
 
 export const auth = betterAuth({
@@ -47,8 +47,8 @@ export const auth = betterAuth({
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
   },
 
@@ -67,11 +67,11 @@ export const auth = betterAuth({
         checkout({
           products: [
             {
-              productId: process.env.POLAR_PRO_PRODUCT_ID!,
+              productId: env.POLAR_PRO_PRODUCT_ID,
               slug: "Pro",
             },
             {
-              productId: process.env.POLAR_ENTERPRISE_PRODUCT_ID!,
+              productId: env.POLAR_ENTERPRISE_PRODUCT_ID,
               slug: "Enterprise",
             },
           ],
@@ -82,7 +82,7 @@ export const auth = betterAuth({
         portal(),
         usage(),
         webhooks({
-          secret: process.env.POLAR_WEBHOOK_SECRET!,
+          secret: env.POLAR_WEBHOOK_SECRET,
           onSubscriptionActive: handleSubscriptionActive,
           onSubscriptionCanceled: handleSubscriptionCanceled,
           onSubscriptionRevoked: handleSubscriptionRevoked,

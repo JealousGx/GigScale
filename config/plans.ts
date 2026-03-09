@@ -16,7 +16,6 @@ export interface PlanDetails {
   features: string[];
   lockedFeatures?: string[];
   highlighted?: boolean;
-  polarProductId?: string;
   slug: string;
   isContactSales?: boolean;
 }
@@ -91,7 +90,6 @@ export const plans: PlanDetails[] = [
       "Priority support",
     ],
     highlighted: true,
-    polarProductId: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
   },
   {
     id: "enterprise",
@@ -109,7 +107,6 @@ export const plans: PlanDetails[] = [
       "API access",
       "Dedicated support",
     ],
-    polarProductId: process.env.NEXT_PUBLIC_POLAR_ENTERPRISE_PRODUCT_ID,
   },
   {
     id: "custom",

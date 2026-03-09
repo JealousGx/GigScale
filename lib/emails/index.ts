@@ -2,6 +2,8 @@
 
 import { Resend } from "resend";
 
+import { env } from "@/lib/env";
+
 type BaseEmail = {
   to: string;
   from: string;
@@ -35,7 +37,7 @@ type TemplateEmail = BaseEmail & {
 type SendEmailArgs = RawEmail | TemplateEmail;
 
 export const sendEmail = async (data: SendEmailArgs) => {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = new Resend(env.RESEND_API_KEY);
 
   const { from, to, template, subject, html, text } = data;
 

@@ -1,11 +1,13 @@
+import { env } from "@/lib/env";
+
 export const siteConfig = {
   name: "GigScale",
   description:
     "Optimize your freelancer profile for maximum visibility and conversions",
   tagline: "AI-powered freelancer profile optimization",
-  domain: process.env.NEXT_PUBLIC_APP_URL,
-  url: `https://${process.env.NEXT_PUBLIC_APP_URL}`,
-  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL,
+  domain: "gigscale.app",
+  url: env.NEXT_PUBLIC_APP_URL,
+  supportEmail: env.NEXT_PUBLIC_SUPPORT_EMAIL,
   locale: "en_US",
   creator: "GigScale",
   keywords: [

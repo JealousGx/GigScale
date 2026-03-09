@@ -17,16 +17,19 @@ import {
   Sun,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Link as CustomLink } from "@/components/ui/link";
+
 import { plans } from "@/config/plans";
 import { siteConfig } from "@/config/site";
+
 import { AuthModal } from "@/features/auth/components/AuthModal";
 
 import { useSession } from "@/lib/auth/client";
+import { env } from "@/lib/env";
 import { useThemeStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
 
@@ -89,31 +92,51 @@ const metrics = [
   { value: "4.9", label: "User rating", hasStar: true },
 ];
 
-export default function LandingPage() {
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authView, setAuthView] = useState<"login" | "signup">("login");
-  const { theme, setTheme } = useThemeStore();
-  const { data: session, isPending } = useSession();
+function AuthParamListener({
+  isAuthenticated,
+  isPending,
+  onOpen,
+}: {
+  isAuthenticated: boolean;
+  isPending: boolean;
+  onOpen: (view: "login" | "signup") => void;
+}) {
   const searchParams = useSearchParams();
-  const isAuthenticated = !!session && !isPending;
 
   useEffect(() => {
     const authParam = searchParams.get("auth");
     if (authParam === "login" || authParam === "signup") {
       if (!isAuthenticated && !isPending) {
-        setAuthView(authParam);
-        setAuthOpen(true);
+        onOpen(authParam);
       }
     }
-  }, [searchParams, isAuthenticated, isPending]);
+  }, [searchParams, isAuthenticated, isPending, onOpen]);
 
-  const openAuth = (view: "login" | "signup") => {
+  return null;
+}
+
+export default function LandingPage() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authView, setAuthView] = useState<"login" | "signup">("login");
+  const { theme, setTheme } = useThemeStore();
+  const { data: session, isPending } = useSession();
+  const isAuthenticated = !!session && !isPending;
+
+  const openAuth = useCallback((view: "login" | "signup") => {
     setAuthView(view);
     setAuthOpen(true);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
+      <Suspense>
+        <AuthParamListener
+          isAuthenticated={isAuthenticated}
+          isPending={isPending}
+          onOpen={openAuth}
+        />
+      </Suspense>
+
       {/* Nav */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-border/30 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -396,7 +419,7 @@ export default function LandingPage() {
                   ))}
                 </div>
                 {plan.isContactSales ? (
-                  <CustomLink href={`mailto:${process.env.NEXT_PUBLIC_SALES_EMAIL}`} variant="outline" className="w-full rounded-2xl">
+                  <CustomLink href={`mailto:${env.NEXT_PUBLIC_SALES_EMAIL}`} variant="outline" className="w-full rounded-2xl">
                     Contact Sales
                   </CustomLink>
                 ) : isAuthenticated ? (

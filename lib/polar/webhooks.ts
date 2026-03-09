@@ -10,10 +10,14 @@ import {
   updateSubscription,
   upsertSubscription,
 } from "@/lib/db/queries/subscriptions";
+import { env } from "@/lib/env";
 
 function resolvePlanFromProductId(productId: string): PlanId {
-  const match = plans.find((p) => p.polarProductId === productId);
-  return match?.id ?? "pro";
+  const productToPlan: Record<string, PlanId> = {
+    [env.POLAR_PRO_PRODUCT_ID]: "pro",
+    [env.POLAR_ENTERPRISE_PRODUCT_ID]: "enterprise",
+  };
+  return productToPlan[productId] ?? "pro";
 }
 export async function handleSubscriptionActive({
   data,

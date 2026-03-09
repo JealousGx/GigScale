@@ -8,18 +8,15 @@ importers:
 
   .:
     dependencies:
-      '@hugeicons/core-free-icons':
-        specifier: ^4.0.0
-        version: 4.0.0
-      '@hugeicons/react':
-        specifier: ^1.1.5
-        version: 1.1.5(react@19.2.3)
       '@polar-sh/better-auth':
         specifier: ^1.8.2
         version: 1.8.2(6b2fe92ca0ce607a24a7d5637c7d277c)
       '@polar-sh/sdk':
         specifier: ^0.46.3
         version: 0.46.3
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.10
+        version: 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
       '@tanstack/react-query':
         specifier: ^5.90.21
         version: 5.90.21(react@19.2.3)
@@ -86,6 +83,9 @@ importers:
       uuidv7:
         specifier: ^1.1.0
         version: 1.1.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
       zustand:
         specifier: ^5.0.11
         version: 5.0.11(@types/react@19.2.14)(immer@11.1.4)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
@@ -900,14 +900,6 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
-
-  '@hugeicons/core-free-icons@4.0.0':
-    resolution: {integrity: sha512-bzfbKumv3ke3ajbe2MyXi9i0I/cdsZ6n/mO9EfIPNSL++pHLqs7nSGRIVUtjF4xrrEyVkfhxssv4Jek8DPA6gA==}
-
-  '@hugeicons/react@1.1.5':
-    resolution: {integrity: sha512-JX/iDz3oO7hWdVqbjwFwRrAjHk8h2vI+mBkNzp4JcXG3t4idoupfjon73nLOA7cr27m0M8hrRC1Q2h6nEBGKVA==}
-    peerDependencies:
-      react: '>=16.0.0'
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -2039,6 +2031,40 @@ packages:
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
+
+  '@t3-oss/env-core@0.13.10':
+    resolution: {integrity: sha512-NNFfdlJ+HmPHkLi2HKy7nwuat9SIYOxei9K10lO2YlcSObDILY7mHZNSHsieIM3A0/5OOzw/P/b+yLvPdaG52g==}
+    peerDependencies:
+      arktype: ^2.1.0
+      typescript: '>=5.0.0'
+      valibot: ^1.0.0-beta.7 || ^1.0.0
+      zod: ^3.24.0 || ^4.0.0
+    peerDependenciesMeta:
+      arktype:
+        optional: true
+      typescript:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
+
+  '@t3-oss/env-nextjs@0.13.10':
+    resolution: {integrity: sha512-JfSA2WXOnvcc/uMdp31paMsfbYhhdvLLRxlwvrnlPE9bwM/n0Z+Qb9xRv48nPpvfMhOrkrTYw1I5Yc06WIKBJQ==}
+    peerDependencies:
+      arktype: ^2.1.0
+      typescript: '>=5.0.0'
+      valibot: ^1.0.0-beta.7 || ^1.0.0
+      zod: ^3.24.0 || ^4.0.0
+    peerDependenciesMeta:
+      arktype:
+        optional: true
+      typescript:
+        optional: true
+      valibot:
+        optional: true
+      zod:
+        optional: true
 
   '@tabby_ai/hijri-converter@1.0.5':
     resolution: {integrity: sha512-r5bClKrcIusDoo049dSL8CawnHR6mRdDwhlQuIgZRNty68q0x8k3Lf1BtPAMxRf/GgnHBnIO4ujd3+GQdLWzxQ==}
@@ -4936,12 +4962,6 @@ snapshots:
     dependencies:
       hono: 4.11.4
 
-  '@hugeicons/core-free-icons@4.0.0': {}
-
-  '@hugeicons/react@1.1.5(react@19.2.3)':
-    dependencies:
-      react: 19.2.3
-
   '@img/colour@1.1.0':
     optional: true
 
@@ -6125,6 +6145,20 @@ snapshots:
   '@swc/helpers@0.5.15':
     dependencies:
       tslib: 2.8.1
+
+  '@t3-oss/env-core@0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
+    optionalDependencies:
+      typescript: 5.9.3
+      valibot: 1.2.0(typescript@5.9.3)
+      zod: 4.3.6
+
+  '@t3-oss/env-nextjs@0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)':
+    dependencies:
+      '@t3-oss/env-core': 0.13.10(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.3.6)
+    optionalDependencies:
+      typescript: 5.9.3
+      valibot: 1.2.0(typescript@5.9.3)
+      zod: 4.3.6
 
   '@tabby_ai/hijri-converter@1.0.5': {}
 

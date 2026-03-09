@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link as CustomLink } from "@/components/ui/link";
 
 import type { PlanDetails } from "@/config/plans";
+import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import type { Plan } from "@/types";
 
@@ -87,7 +88,7 @@ export function PlanCard({
       </div>
 
       {isCustom ? (
-        <CustomLink href={`mailto:${process.env.NEXT_PUBLIC_SALES_EMAIL}`} variant="outline" size="sm" className="w-full rounded-xl">
+        <CustomLink href={`mailto:${env.NEXT_PUBLIC_SALES_EMAIL}`} variant="outline" size="sm" className="w-full rounded-xl">
           <Mail size={14} strokeWidth={1.5} />
           Contact Sales
         </CustomLink>
