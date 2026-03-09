@@ -2,72 +2,71 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   BarChart3,
   ClipboardCheck,
   Clock,
   Eye,
+  Loader2,
   ShieldCheck,
   TrendingUp,
 } from "lucide-react";
 
 import { Link as CustomLink } from "@/components/ui/link";
-
+import { useLatestAnalysis } from "@/features/profile-scan/hooks/useAnalyses";
 import { PRIORITY_CONFIG } from "@/features/suggestions/types/suggestionsTypes";
 
 import { cn } from "@/lib/utils";
 
 interface ScoreMetric {
   label: string;
-  value: number;
-  delta: number;
+  key: string;
   icon: LucideIcon;
   colorClass: string;
   bgClass: string;
 }
 
-const scores: ScoreMetric[] = [
+const scoreConfig: ScoreMetric[] = [
   {
     label: "Profile Score",
-    value: 74,
-    delta: +5,
+    key: "profileScore",
     icon: BarChart3,
     colorClass: "text-primary-foreground",
     bgClass: "bg-primary",
   },
   {
     label: "Visibility",
-    value: 68,
-    delta: +12,
+    key: "visibilityScore",
     icon: Eye,
     colorClass: "text-primary-foreground",
     bgClass: "bg-secondary",
   },
   {
     label: "Conversion",
-    value: 72,
-    delta: -3,
+    key: "conversionScore",
     icon: TrendingUp,
     colorClass: "text-primary-foreground",
     bgClass: "bg-chart-2",
   },
   {
     label: "Trust",
-    value: 85,
-    delta: +2,
+    key: "trustScore",
     icon: ShieldCheck,
     colorClass: "text-secondary-foreground",
     bgClass: "bg-chart-1",
   },
   {
     label: "Completeness",
-    value: 60,
-    delta: 0,
+    key: "completenessScore",
     icon: ClipboardCheck,
     colorClass: "text-foreground",
     bgClass: "bg-chart-3",
   },
+];
+
+const quickSuggestions = [
+  { title: "Add a compelling CTA", priority: "high" as const, impact: "+8 conversion" },
+  { title: "Include 3 more portfolio items", priority: "medium" as const, impact: "+5 trust" },
+  { title: "Optimize title keywords", priority: "critical" as const, impact: "+12 visibility" },
 ];
 
 const recentActions = [
@@ -77,13 +76,9 @@ const recentActions = [
   { action: "Description rewritten", platform: "Upwork", time: "2 days ago" },
 ];
 
-const quickSuggestions = [
-  { title: "Add a compelling CTA", priority: "high" as const, impact: "+8 conversion" },
-  { title: "Include 3 more portfolio items", priority: "medium" as const, impact: "+5 trust" },
-  { title: "Optimize title keywords", priority: "critical" as const, impact: "+12 visibility" },
-];
-
 export default function DashboardPage() {
+  const { data: analysis, isLoading } = useLatestAnalysis();
+
   return (
     <div className="space-y-10">
       <div>
@@ -93,50 +88,50 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/40 bg-border/40 sm:grid-cols-3 lg:grid-cols-5">
-        {scores.map((score) => {
-          const Icon = score.icon;
-          return (
-            <div
-              key={score.label}
-              className="group relative flex flex-col gap-3 bg-background p-6 transition-colors hover:bg-muted/10"
-            >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-muted-foreground" />
+        </div>
+      ) : !analysis ? (
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-border/40 bg-muted/5 py-14 text-center">
+          <p className="font-medium">No profile data yet</p>
+          <p className="text-sm text-muted-foreground">
+            Scan your first profile to see your performance scores
+          </p>
+          <CustomLink href="/dashboard/analyze" variant="default" className="mt-2 rounded-2xl">
+            Analyze a Profile
+          </CustomLink>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border/40 bg-border/40 sm:grid-cols-3 lg:grid-cols-5">
+          {scoreConfig.map((score) => {
+            const Icon = score.icon;
+            const value = Number(analysis[score.key as keyof typeof analysis]) || 0;
+            return (
               <div
-                className={cn(
-                  "flex size-10 items-center justify-center rounded-xl shadow-md",
-                  score.bgClass,
-                  score.colorClass
-                )}
+                key={score.label}
+                className="group relative flex flex-col gap-3 bg-background p-6 transition-colors hover:bg-muted/10"
               >
-                <Icon size={18} strokeWidth={1.5} />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-bold tabular-nums tracking-tight">
-                    {score.value}
-                  </span>
-                  {score.delta !== 0 && (
-                    <span
-                      className={cn(
-                        "flex items-center gap-0.5 text-xs font-medium",
-                        score.delta > 0 ? "text-chart-1" : "text-destructive"
-                      )}
-                    >
-                      {score.delta > 0 ? (
-                        <ArrowUpRight size={12} strokeWidth={2} />
-                      ) : (
-                        <ArrowDownRight size={12} strokeWidth={2} />
-                      )}
-                      {Math.abs(score.delta)}
-                    </span>
+                <div
+                  className={cn(
+                    "flex size-10 items-center justify-center rounded-xl shadow-md",
+                    score.bgClass,
+                    score.colorClass,
                   )}
+                >
+                  <Icon size={18} strokeWidth={1.5} />
                 </div>
-                <p className="mt-0.5 text-sm text-muted-foreground">{score.label}</p>
+                <div>
+                  <span className="text-3xl font-bold tabular-nums tracking-tight">
+                    {Math.round(value)}
+                  </span>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{score.label}</p>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       <div className="grid gap-10 lg:grid-cols-5">
         <div className="space-y-5 lg:col-span-3">

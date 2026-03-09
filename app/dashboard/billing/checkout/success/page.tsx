@@ -40,17 +40,33 @@ export default function CheckoutSuccessPage() {
   }, []);
 
   useEffect(() => {
-    async function refreshCredits() {
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    async function syncAndRefresh() {
       try {
-        const res = await fetch("/api/billing/credits");
-        if (!res.ok) return;
-        const data = await res.json();
-        setCredits(data);
+        const creditsRes = await fetch("/api/billing/credits");
+        if (creditsRes.ok) {
+          const data = await creditsRes.json();
+          if (data.plan !== "free") {
+            setCredits(data);
+            return;
+          }
+        }
+
+        if (attempts < maxAttempts) {
+          attempts++;
+          await fetch("/api/billing/sync", { method: "POST" });
+          const retryRes = await fetch("/api/billing/credits");
+          if (retryRes.ok) {
+            setCredits(await retryRes.json());
+          }
+        }
       } catch {
         // Will show stale store data
       }
     }
-    refreshCredits();
+    syncAndRefresh();
   }, [setCredits]);
 
   return (
@@ -137,7 +153,7 @@ export default function CheckoutSuccessPage() {
               Credits
             </span>
             <span className="font-semibold tabular-nums">
-              {credits ?? planDetails?.creditsPerMonth ?? "—"} / month
+              {credits ?? planDetails?.creditsPerMonth ?? "—"}
             </span>
           </div>
         </motion.div>

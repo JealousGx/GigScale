@@ -1,31 +1,27 @@
 "use client";
 
+import { AlertCircle, Loader2 } from "lucide-react";
+
 import { FeatureGate } from "@/components/shared/FeatureGate";
+import { Link } from "@/components/ui/link";
+
+import { useProfiles } from "@/features/profile-scan/hooks/useProfiles";
 import { RewriteEditor } from "@/features/rewrite/components/RewriteEditor";
 import { RewritePreview } from "@/features/rewrite/components/RewritePreview";
 import { useRewrite } from "@/features/rewrite/hooks/useRewrite";
-import type { RewriteMode, RewriteType } from "@/types";
 
-const mockRewrite = {
-  id: "r1",
-  profileId: "p1",
-  type: "headline" as const,
-  mode: "seo_optimization" as const,
-  originalText:
-    "Full stack developer with experience in building web applications using React and Node.js",
-  rewrittenText:
-    "Senior Full-Stack Developer | React & Next.js Expert | Building Scalable SaaS Applications That Drive Revenue Growth",
-  createdAt: new Date(),
-};
+import type { RewriteMode, RewriteType } from "@/types";
 
 export default function RewritePage() {
   const { generate, result, status, error, reset } = useRewrite();
+  const { data: profiles, isLoading: profilesLoading } = useProfiles();
+
+  const latestProfile = profiles?.[0];
 
   const handleGenerate = async (type: RewriteType, originalText: string, mode: RewriteMode) => {
-    await generate("p1", type, originalText, mode);
+    if (!latestProfile) return;
+    await generate(latestProfile.id, type, originalText, mode);
   };
-
-  const displayResult = result ?? (status === "complete" ? mockRewrite : null);
 
   return (
     <div className="mx-auto max-w-3xl space-y-10">
@@ -37,16 +33,45 @@ export default function RewritePage() {
       </div>
 
       <FeatureGate action="rewrite_generated">
-        {error && (
-          <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-5 py-4 text-sm text-destructive">
-            {error}
+        {profilesLoading && (
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            <Loader2 size={20} className="animate-spin" />
           </div>
         )}
 
-        {displayResult ? (
-          <RewritePreview rewrite={displayResult} onReset={reset} />
-        ) : (
-          <RewriteEditor onGenerate={handleGenerate} status={status} />
+        {!profilesLoading && !latestProfile && (
+          <div className="flex flex-col items-center gap-4 rounded-2xl border border-border/40 bg-muted/5 py-16 text-center">
+            <AlertCircle size={32} className="text-muted-foreground" />
+            <div>
+              <p className="font-medium">No profiles scanned yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Scan a profile first to use the rewrite tool
+              </p>
+            </div>
+            <Link href="/dashboard/analyze" variant="default" className="mt-2 rounded-2xl">
+              Analyze a Profile
+            </Link>
+          </div>
+        )}
+
+        {!profilesLoading && latestProfile && (
+          <>
+            <div className="rounded-xl bg-muted/20 px-4 py-2.5 text-sm text-muted-foreground">
+              Using profile: <span className="font-medium text-foreground">{latestProfile.profileTitle}</span>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-5 py-4 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            {result ? (
+              <RewritePreview rewrite={result} onReset={reset} />
+            ) : (
+              <RewriteEditor onGenerate={handleGenerate} status={status} />
+            )}
+          </>
         )}
       </FeatureGate>
     </div>

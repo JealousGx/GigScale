@@ -1,39 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { featureSuggestionsService } from "../services/suggestionsService";
+import { queryKeys } from "@/lib/query-keys";
 import type { Suggestion } from "@/types";
 
-export function useSuggestions() {
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function useSuggestions(analysisId: string | undefined) {
+  const queryClient = useQueryClient();
 
-  const loadSuggestions = async (analysisId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await featureSuggestionsService.getByAnalysis(analysisId);
-      setSuggestions(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load suggestions");
-    } finally {
-      setIsLoading(false);
-    }
+  const query = useQuery<Suggestion[]>({
+    queryKey: queryKeys.suggestions.byAnalysis(analysisId!),
+    queryFn: () => featureSuggestionsService.getByAnalysis(analysisId!),
+    enabled: !!analysisId,
+  });
+
+  const generateMutation = useMutation<Suggestion[], Error, string>({
+    mutationFn: (id) => featureSuggestionsService.generate(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.suggestions.byAnalysis(id),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credits.all });
+    },
+  });
+
+  return {
+    suggestions: query.data ?? [],
+    isLoading: query.isLoading || generateMutation.isPending,
+    error:
+      query.error?.message ?? generateMutation.error?.message ?? null,
+    loadSuggestions: () => query.refetch(),
+    generateSuggestions: (id: string) => generateMutation.mutateAsync(id),
   };
-
-  const generateSuggestions = async (analysisId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await featureSuggestionsService.generate(analysisId);
-      setSuggestions(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate suggestions");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return { suggestions, isLoading, error, loadSuggestions, generateSuggestions };
 }

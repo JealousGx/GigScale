@@ -1,48 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { featureRewriteService } from "../services/rewriteService";
-import { useCreditsStore } from "@/lib/stores";
-import { getCreditCost } from "@/config/plans";
+import { queryKeys } from "@/lib/query-keys";
 import type { Rewrite, RewriteMode, RewriteType } from "@/types";
 import type { RewriteStatus } from "../types/rewriteTypes";
 
+interface GenerateArgs {
+  profileId: string;
+  type: RewriteType;
+  originalText: string;
+  mode: RewriteMode;
+}
+
 export function useRewrite() {
-  const [result, setResult] = useState<Rewrite | null>(null);
-  const [status, setStatus] = useState<RewriteStatus>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const spendCredits = useCreditsStore((s) => s.spendCredits);
+  const queryClient = useQueryClient();
 
-  const generate = async (
-    profileId: string,
-    type: RewriteType,
-    originalText: string,
-    mode: RewriteMode,
-  ) => {
-    setStatus("generating");
-    setError(null);
-    try {
-      const rewrite = await featureRewriteService.generate(
-        profileId,
-        type,
-        originalText,
-        mode,
-      );
-      setResult(rewrite);
-      setStatus("complete");
-      spendCredits(getCreditCost("rewrite_generated"));
-      return rewrite;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Rewrite failed");
-      setStatus("error");
-    }
+  const mutation = useMutation<Rewrite, Error, GenerateArgs>({
+    mutationFn: ({ profileId, type, originalText, mode }) =>
+      featureRewriteService.generate(profileId, type, originalText, mode),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.rewrites.byProfile(variables.profileId),
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credits.all });
+    },
+  });
+
+  const status: RewriteStatus = mutation.isPending
+    ? "generating"
+    : mutation.isSuccess
+      ? "complete"
+      : mutation.isError
+        ? "error"
+        : "idle";
+
+  return {
+    generate: (
+      profileId: string,
+      type: RewriteType,
+      originalText: string,
+      mode: RewriteMode,
+    ) => mutation.mutateAsync({ profileId, type, originalText, mode }),
+    result: mutation.data ?? null,
+    status,
+    error: mutation.error?.message ?? null,
+    reset: mutation.reset,
   };
+}
 
-  const reset = () => {
-    setResult(null);
-    setStatus("idle");
-    setError(null);
-  };
-
-  return { generate, result, status, error, reset };
+export function useRewriteHistory(profileId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.rewrites.byProfile(profileId!),
+    queryFn: () => featureRewriteService.getHistory(profileId!),
+    enabled: !!profileId,
+  });
 }

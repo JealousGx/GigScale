@@ -1,39 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { scanService } from "../services/scanService";
-import { useCreditsStore } from "@/lib/stores";
-import { getCreditCost } from "@/config/plans";
+import { queryKeys } from "@/lib/query-keys";
 import type { ScanFormData, ScanResult, ScanStatus } from "../types/scanTypes";
 
 export function useProfileScan() {
-  const [status, setStatus] = useState<ScanStatus>("idle");
-  const [result, setResult] = useState<ScanResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const spendCredits = useCreditsStore((s) => s.spendCredits);
+  const queryClient = useQueryClient();
 
-  const scan = async (data: ScanFormData) => {
-    setStatus("scanning");
-    setError(null);
-    try {
-      const scanResult = await scanService.scan(data);
-      setResult(scanResult);
-      setStatus("complete");
-      spendCredits(getCreditCost("profile_scan"));
-      return scanResult;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Scan failed";
-      setError(message);
-      setStatus("error");
-      throw err;
-    }
+  const mutation = useMutation<ScanResult, Error, ScanFormData>({
+    mutationFn: (data) => scanService.scan(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.profiles.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analyses.latest });
+      queryClient.invalidateQueries({ queryKey: queryKeys.analyses.history });
+      queryClient.invalidateQueries({ queryKey: queryKeys.credits.all });
+    },
+  });
+
+  const status: ScanStatus = mutation.isPending
+    ? "scanning"
+    : mutation.isSuccess
+      ? "complete"
+      : mutation.isError
+        ? "error"
+        : "idle";
+
+  return {
+    scan: (data: ScanFormData) => mutation.mutateAsync(data),
+    status,
+    result: mutation.data ?? null,
+    error: mutation.error?.message ?? null,
+    reset: mutation.reset,
   };
-
-  const reset = () => {
-    setStatus("idle");
-    setResult(null);
-    setError(null);
-  };
-
-  return { scan, status, result, error, reset };
 }

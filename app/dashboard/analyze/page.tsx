@@ -3,6 +3,7 @@
 import { ScanInput } from "@/features/profile-scan/components/ScanInput";
 import { ScanResults } from "@/features/profile-scan/components/ScanResults";
 import { useProfileScan } from "@/features/profile-scan/hooks/useProfileScan";
+
 import type { Analysis, Profile } from "@/types";
 
 const mockProfile: Profile = {
@@ -33,7 +34,7 @@ const mockAnalysis: Analysis = {
 };
 
 export default function AnalyzePage() {
-  const { status, result, error, scan } = useProfileScan();
+  const { status, result, error, scan, reset } = useProfileScan();
 
   const handleScan = async (url: string, platform: "upwork" | "fiverr") => {
     try {
@@ -43,7 +44,6 @@ export default function AnalyzePage() {
     }
   };
 
-  const displayResult = result ?? (status === "idle" ? null : null);
   const showMockDemo = status === "idle";
 
   return (
@@ -59,12 +59,17 @@ export default function AnalyzePage() {
 
       {error && (
         <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-5 py-4 text-sm text-destructive">
-          {error}
+          <div className="flex items-center justify-between">
+            {error}
+            <button type="button" onClick={reset} className="text-xs underline">
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
-      {displayResult && (
-        <ScanResults profile={displayResult.profile} analysis={displayResult.analysis} />
+      {result && (
+        <ScanResults profile={result.profile} analysis={result.analysis} />
       )}
 
       {showMockDemo && (

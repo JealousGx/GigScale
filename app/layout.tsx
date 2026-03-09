@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { cn } from "@/lib/utils";
+
+import { QueryProvider } from "@/components/providers/QueryProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/components/ThemeProvider";
+
 import { siteConfig } from "@/config/site";
+
+import { cn } from "@/lib/utils";
+
+import "./globals.css";
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -112,12 +117,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", figtree.variable)} suppressHydrationWarning>
       <body className={cn(geistMono.variable, "antialiased")}>
-        <ThemeProvider>
-          <TooltipProvider>
-            {children}
-          </TooltipProvider>
-          <Toaster />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+            <Toaster />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );
