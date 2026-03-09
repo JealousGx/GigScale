@@ -1,6 +1,6 @@
 import { sendEmail } from ".";
 
-const FROM = process.env.SUPPORT_EMAIL as string;
+const FROM = process.env.NEXT_PUBLIC_SUPPORT_EMAIL as string;
 
 export async function sendAuthOTPEmail(data: { email: string; otp: string }) {
   await sendEmail({
