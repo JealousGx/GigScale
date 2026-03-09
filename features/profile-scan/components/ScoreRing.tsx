@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { getScoreStroke, getScoreColor, getScoreLabel } from "../utils/scanHelpers";
+import { getScoreColor, getScoreLabel, getScoreStroke } from "../utils/scanHelpers";
 
 interface ScoreRingProps {
   score: number;
@@ -28,6 +28,7 @@ export function ScoreRing({
     <div className={cn("relative inline-flex flex-col items-center gap-2", className)}>
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
+          <title>Profile Score: {score} / 100</title>
           <circle
             cx={size / 2}
             cy={size / 2}

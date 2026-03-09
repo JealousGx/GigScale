@@ -1,8 +1,12 @@
 "use client";
 
-import type { Suggestion, Priority } from "@/types";
-import { SuggestionCard } from "./SuggestionCard";
+import { randomUUID } from "node:crypto";
+
 import { Skeleton } from "@/components/ui/skeleton";
+
+import type { Priority, Suggestion } from "@/types";
+
+import { SuggestionCard } from "./SuggestionCard";
 
 interface SuggestionsListProps {
   suggestions: Suggestion[];
@@ -16,7 +20,7 @@ export function SuggestionsList({ suggestions, isLoading }: SuggestionsListProps
     return (
       <div className="space-y-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={`skeleton-${i}`} className="flex items-start gap-4 py-5">
+          <div key={`skeleton-${randomUUID()}`} className="flex items-start gap-4 py-5">
             <Skeleton className="size-7 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-2/3" />
