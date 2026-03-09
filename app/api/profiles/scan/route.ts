@@ -1,67 +1,52 @@
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 import {
   authenticateRequest,
-  badRequest,
   created,
   forbidden,
-  serverError,
+  handleRouteError,
+  parseBody,
   unauthorized,
 } from "@/lib/api";
-import { insertAnalysis } from "@/lib/db/queries/analyses";
-import {
-  insertProfile,
-  updateProfileLastScanned,
-} from "@/lib/db/queries/profiles";
+import { findPreviousAnalysisByProfileId } from "@/lib/db/queries/analyses";
+import { analyzeProfile } from "@/lib/services/analyzer";
 import { spendCredits } from "@/lib/services/credits";
+
+const scanSchema = z.object({
+  profileUrl: z.string().url("profileUrl must be a valid URL"),
+  platform: z.enum(["upwork", "fiverr"], {
+    message: "platform must be 'upwork' or 'fiverr'",
+  }),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const authed = await authenticateRequest();
     if (!authed) return unauthorized();
 
-    const body = await request.json();
-    if (!body.profileUrl || !body.platform) {
-      return badRequest("profileUrl and platform are required");
-    }
-    if (!["upwork", "fiverr"].includes(body.platform)) {
-      return badRequest("platform must be 'upwork' or 'fiverr'");
-    }
+    const parsed = await parseBody(request, scanSchema);
+    if ("error" in parsed) return parsed.error;
+    const { profileUrl, platform } = parsed.data;
 
     const credits = await spendCredits(authed.userId, "profile_scan", {
-      profileUrl: body.profileUrl,
-      platform: body.platform,
+      profileUrl,
+      platform,
     });
-    if (!credits.success) {
-      return forbidden(credits.error);
-    }
+    if (!credits.success) return forbidden(credits.error);
 
-    const profile = await insertProfile({
+    const { profile, analysis } = await analyzeProfile({
       userId: authed.userId,
-      platform: body.platform,
-      profileUrl: body.profileUrl,
-      profileTitle: `${body.platform.charAt(0).toUpperCase() + body.platform.slice(1)} Profile`,
-      profileDescription: "Profile scanned via GigScale",
+      profileUrl,
+      platform,
     });
 
-    const scores = {
-      profileScore: (Math.random() * 30 + 50).toFixed(2),
-      visibilityScore: (Math.random() * 30 + 40).toFixed(2),
-      conversionScore: (Math.random() * 30 + 45).toFixed(2),
-      trustScore: (Math.random() * 20 + 60).toFixed(2),
-      completenessScore: (Math.random() * 30 + 40).toFixed(2),
-    };
+    const previousAnalysis = analysis
+      ? await findPreviousAnalysisByProfileId(profile!.id, analysis.id)
+      : null;
 
-    const analysis = await insertAnalysis({
-      profileId: profile.id,
-      ...scores,
-    });
-
-    await updateProfileLastScanned(profile.id);
-
-    return created({ profile, analysis });
+    return created({ profile, analysis, previousAnalysis });
   } catch (error) {
-    console.error("[POST /api/profiles/scan]", error);
-    return serverError();
+    return handleRouteError(error, "[POST /api/profiles/scan]");
   }
 }

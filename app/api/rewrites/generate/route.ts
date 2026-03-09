@@ -1,39 +1,46 @@
 import type { NextRequest } from "next/server";
+import { z } from "zod";
 
 import {
   authenticateRequest,
-  badRequest,
   created,
   forbidden,
+  handleRouteError,
   notFound,
-  serverError,
+  parseBody,
   unauthorized,
 } from "@/lib/api";
+import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
+import { findLatestAnalysisByProfileId } from "@/lib/db/queries/analyses";
 import { findProfileById } from "@/lib/db/queries/profiles";
-import { insertRewrite } from "@/lib/db/queries/rewrites";
 import { spendCredits } from "@/lib/services/credits";
+import { generateRewrite } from "@/lib/services/rewrite-engine";
 
-const VALID_TYPES = ["headline", "description", "gig"] as const;
-const VALID_MODES = [
-  "seo_optimization",
-  "conversion_optimization",
-  "premium_client_targeting",
-  "clarity_improvement",
-] as const;
+const rewriteSchema = z.object({
+  profileId: z.string().min(1, "profileId is required"),
+  type: z.enum(["headline", "description", "gig"], {
+    message: "type must be 'headline', 'description', or 'gig'",
+  }),
+  originalText: z.string().min(1, "originalText is required"),
+  mode: z.enum(
+    [
+      "seo_optimization",
+      "conversion_optimization",
+      "premium_client_targeting",
+      "clarity_improvement",
+    ],
+    { message: "Invalid rewrite mode" },
+  ),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const authed = await authenticateRequest();
     if (!authed) return unauthorized();
 
-    const body = await request.json();
-    const { profileId, type, originalText, mode } = body;
-
-    if (!profileId || !type || !originalText || !mode) {
-      return badRequest("profileId, type, originalText, and mode are required");
-    }
-    if (!VALID_TYPES.includes(type)) return badRequest("Invalid rewrite type");
-    if (!VALID_MODES.includes(mode)) return badRequest("Invalid rewrite mode");
+    const parsed = await parseBody(request, rewriteSchema);
+    if ("error" in parsed) return parsed.error;
+    const { profileId, type, originalText, mode } = parsed.data;
 
     const profile = await findProfileById(profileId);
     if (!profile) return notFound("Profile not found");
@@ -46,20 +53,31 @@ export async function POST(request: NextRequest) {
     });
     if (!credits.success) return forbidden(credits.error);
 
-    // Placeholder until AI is integrated
-    const rewrittenText = `[${mode.replace(/_/g, " ").toUpperCase()}] ${originalText}`;
+    const latestAnalysis = await findLatestAnalysisByProfileId(profileId);
 
-    const rewrite = await insertRewrite({
+    let analysisScores: ProfileAnalysisResult | null = null;
+    if (latestAnalysis) {
+      analysisScores = {
+        profileScore: parseFloat(latestAnalysis.profileScore),
+        visibilityScore: parseFloat(latestAnalysis.visibilityScore),
+        conversionScore: parseFloat(latestAnalysis.conversionScore),
+        trustScore: parseFloat(latestAnalysis.trustScore),
+        completenessScore: parseFloat(latestAnalysis.completenessScore),
+        summary: latestAnalysis.summary ?? "",
+      };
+    }
+
+    const rewrite = await generateRewrite({
       profileId,
       type,
       mode,
       originalText,
-      rewrittenText,
+      platform: profile.platform,
+      analysisScores,
     });
 
     return created(rewrite);
   } catch (error) {
-    console.error("[POST /api/rewrites/generate]", error);
-    return serverError();
+    return handleRouteError(error, "[POST /api/rewrites/generate]");
   }
 }

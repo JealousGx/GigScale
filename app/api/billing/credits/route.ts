@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
 import { findSubscriptionByUserId } from "@/lib/db/queries/subscriptions";
+import { countUserActionUsage } from "@/lib/db/queries/usage-logs";
 
 export async function GET() {
   const session = await auth.api.getSession({
@@ -13,14 +14,20 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const subscription = await findSubscriptionByUserId(session.user.id);
+  const [subscription, pastScans] = await Promise.all([
+    findSubscriptionByUserId(session.user.id),
+    countUserActionUsage(session.user.id, "profile_scan"),
+  ]);
+
+  const freeScansRemaining = Math.max(0, 1 - pastScans);
 
   if (!subscription) {
     return NextResponse.json({
       plan: "free",
-      credits: 2,
+      credits: 0,
       creditsUsed: 0,
-      creditsTotal: 2,
+      creditsTotal: 0,
+      freeScansRemaining,
     });
   }
 
@@ -34,5 +41,6 @@ export async function GET() {
     credits: remaining,
     creditsUsed: subscription.creditsUsed,
     creditsTotal: subscription.creditsTotal,
+    freeScansRemaining,
   });
 }

@@ -5,7 +5,10 @@ import {
   serverError,
   unauthorized,
 } from "@/lib/api";
-import { findLatestAnalysisByUserId } from "@/lib/db/queries/analyses";
+import {
+  findLatestAnalysisByUserId,
+  findPreviousAnalysisByProfileId,
+} from "@/lib/db/queries/analyses";
 
 export async function GET() {
   try {
@@ -15,7 +18,12 @@ export async function GET() {
     const analysis = await findLatestAnalysisByUserId(authed.userId);
     if (!analysis) return notFound("No analyses found");
 
-    return ok(analysis);
+    const previousAnalysis = await findPreviousAnalysisByProfileId(
+      analysis.profileId,
+      analysis.id,
+    );
+
+    return ok({ analysis, previousAnalysis });
   } catch (error) {
     console.error("[GET /api/analyses/latest]", error);
     return serverError();
