@@ -58,6 +58,7 @@ export const accounts = mysqlTable(
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .$onUpdate(() => new Date())
+      .defaultNow()
       .notNull(),
   },
   (t) => [index("accounts_user_id_idx").on(t.userId)],
