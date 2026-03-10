@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -29,7 +30,9 @@ export const suggestions = mysqlTable(
       "low",
     ]).notNull(),
     isApplied: boolean("is_applied").default(false).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
   },
   (t) => [
     index("suggestions_analysis_id_idx").on(t.analysisId),

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   int,
@@ -31,10 +32,15 @@ export const subscriptions = mysqlTable(
     creditsTotal: int("credits_total").notNull().default(2),
     creditsUsed: int("credits_used").notNull().default(0),
     polarSubscriptionId: varchar("polar_subscription_id", { length: 255 }),
-    currentPeriodStart: timestamp("current_period_start"),
-    currentPeriodEnd: timestamp("current_period_end"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    currentPeriodStart: timestamp("current_period_start", { fsp: 3 }),
+    currentPeriodEnd: timestamp("current_period_end", { fsp: 3 }),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .onUpdateNow()
+      .notNull(),
   },
   (t) => [
     index("subscriptions_user_id_idx").on(t.userId),

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   decimal,
   index,
@@ -42,9 +43,14 @@ export const profiles = mysqlTable(
       .default("0")
       .notNull(),
     crawlMeta: json("crawl_meta").$type<ProfileCrawlMeta>(),
-    lastScannedAt: timestamp("last_scanned_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+    lastScannedAt: timestamp("last_scanned_at", { fsp: 3 }),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .onUpdateNow()
+      .notNull(),
   },
   (t) => [
     index("profiles_user_id_idx").on(t.userId),

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   mysqlEnum,
@@ -27,7 +28,9 @@ export const rewrites = mysqlTable(
     ]).notNull(),
     originalText: text("original_text").notNull(),
     rewrittenText: text("rewritten_text").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
   },
   (t) => [
     index("rewrites_profile_id_idx").on(t.profileId),

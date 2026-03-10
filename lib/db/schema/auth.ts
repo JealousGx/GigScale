@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -13,9 +14,11 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
   image: text("image"),
-  createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { fsp: 3 })
+    .default(sql`CURRENT_TIMESTAMP(3)`)
+    .notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
-    .defaultNow()
+    .default(sql`CURRENT_TIMESTAMP(3)`)
     .$onUpdate(() => new Date())
     .notNull(),
 });
@@ -55,10 +58,12 @@ export const accounts = mysqlTable(
     refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { fsp: 3 }),
     scope: text("scope"),
     password: text("password"),
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .$onUpdate(() => new Date())
-      .defaultNow()
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
   },
   (t) => [index("accounts_user_id_idx").on(t.userId)],
@@ -71,9 +76,11 @@ export const verifications = mysqlTable(
     identifier: varchar("identifier", { length: 255 }).notNull(),
     value: text("value").notNull(),
     expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .defaultNow()
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .$onUpdate(() => new Date())
       .notNull(),
   },

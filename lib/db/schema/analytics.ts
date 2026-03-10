@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   decimal,
   index,
@@ -6,8 +7,8 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { analysisId } from "@/lib/id";
 
+import { analysisId } from "@/lib/id";
 import { profiles } from "./profile";
 
 export const analyses = mysqlTable(
@@ -33,7 +34,9 @@ export const analyses = mysqlTable(
       .default("0")
       .notNull(),
     summary: text("summary"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
   },
   (t) => [
     index("analyses_profile_id_idx").on(t.profileId),
