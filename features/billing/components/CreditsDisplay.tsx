@@ -41,7 +41,7 @@ export function CreditsDisplay() {
           </span>
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          credits remaining this month
+          credits remaining
         </p>
       </div>
 
