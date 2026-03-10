@@ -8,8 +8,8 @@ import {
   serverError,
   unauthorized,
 } from "@/lib/api";
+import { uploadToR2 } from "@/lib/cloudflare/r2";
 import { getDb, users } from "@/lib/db";
-import { uploadToR2 } from "@/lib/r2";
 
 const ALLOWED_TYPES = [
   "image/jpeg",

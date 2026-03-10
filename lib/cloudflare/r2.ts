@@ -8,6 +8,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "../env";
+import { getEnvironment } from "../utils";
 
 export interface FileObject {
   Key?: string;
@@ -32,7 +33,7 @@ const S3 = new S3Client({
 });
 
 export async function getSignedUrlForUpload(key: string, contentType: string) {
-  key = `${process.env.NODE_ENV === "production" ? "" : "dev/"}${key}`;
+  key = withR2EnvPrefix(key);
 
   const command = new PutObjectCommand({
     Bucket: R2_BUCKET,
@@ -66,4 +67,28 @@ export async function deleteFile(key: string) {
     console.error("Error deleting file:", error);
     throw error;
   }
+}
+
+export async function uploadToR2(
+  key: string,
+  body: Buffer,
+  contentType: string,
+) {
+  const prefixedKey = withR2EnvPrefix(key);
+  await S3.send(
+    new PutObjectCommand({
+      Bucket: env.R2_BUCKET,
+      Key: prefixedKey,
+      Body: body,
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000, immutable",
+    }),
+  );
+
+  return `${env.R2_PUBLIC_URL}/${prefixedKey}`;
+}
+
+function withR2EnvPrefix(key: string) {
+  const trimmed = key.replace(/^\/+/, "");
+  return `${getEnvironment()}/${trimmed}`;
 }
