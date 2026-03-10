@@ -8,6 +8,8 @@ import {
 
 import { env } from "@/lib/env";
 
+export * from "./schema";
+
 export type DB = TiDBServerlessDatabase<Record<string, never>> & {
   $client: Connection;
 };
