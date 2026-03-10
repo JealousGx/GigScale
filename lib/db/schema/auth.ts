@@ -19,7 +19,6 @@ export const users = mysqlTable("users", {
     .notNull(),
   updatedAt: timestamp("updated_at", { fsp: 3 })
     .default(sql`CURRENT_TIMESTAMP(3)`)
-    .$onUpdate(() => new Date())
     .notNull(),
 });
 
@@ -33,7 +32,7 @@ export const sessions = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => new Date())
+      .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
@@ -64,7 +63,6 @@ export const accounts = mysqlTable(
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
-      .$onUpdate(() => new Date())
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),
   },
@@ -83,7 +81,6 @@ export const verifications = mysqlTable(
       .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .default(sql`CURRENT_TIMESTAMP(3)`)
-      .$onUpdate(() => new Date())
       .notNull(),
   },
   (t) => [index("verifications_identifier_idx").on(t.identifier)],

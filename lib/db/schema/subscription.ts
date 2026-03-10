@@ -39,7 +39,6 @@ export const subscriptions = mysqlTable(
       .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .default(sql`CURRENT_TIMESTAMP(3)`)
-      .onUpdateNow()
       .notNull(),
   },
   (t) => [

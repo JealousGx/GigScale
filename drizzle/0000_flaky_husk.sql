@@ -11,7 +11,7 @@ CREATE TABLE `accounts` (
 	`scope` text,
 	`password` text,
 	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-	`updated_at` timestamp(3) NOT NULL,
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `accounts_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -24,7 +24,7 @@ CREATE TABLE `analyses` (
 	`trust_score` decimal(5,2) NOT NULL DEFAULT '0',
 	`completeness_score` decimal(5,2) NOT NULL DEFAULT '0',
 	`summary` text,
-	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `analyses_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -40,9 +40,9 @@ CREATE TABLE `profiles` (
 	`portfolio_count` int NOT NULL DEFAULT 0,
 	`profile_age_years` decimal(4,1) NOT NULL DEFAULT '0',
 	`crawl_meta` json,
-	`last_scanned_at` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`last_scanned_at` timestamp(3),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `profiles_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -53,7 +53,7 @@ CREATE TABLE `rewrites` (
 	`mode` enum('seo_optimization','conversion_optimization','premium_client_targeting','clarity_improvement') NOT NULL,
 	`original_text` text NOT NULL,
 	`rewritten_text` text NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `rewrites_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -62,7 +62,7 @@ CREATE TABLE `sessions` (
 	`expires_at` timestamp(3) NOT NULL,
 	`token` varchar(255) NOT NULL,
 	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-	`updated_at` timestamp(3) NOT NULL,
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	`ip_address` text,
 	`user_agent` text,
 	`user_id` varchar(48) NOT NULL,
@@ -78,10 +78,10 @@ CREATE TABLE `subscriptions` (
 	`credits_total` int NOT NULL DEFAULT 2,
 	`credits_used` int NOT NULL DEFAULT 0,
 	`polar_subscription_id` varchar(255),
-	`current_period_start` timestamp,
-	`current_period_end` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`current_period_start` timestamp(3),
+	`current_period_end` timestamp(3),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `subscriptions_id` PRIMARY KEY(`id`),
 	CONSTRAINT `subscriptions_polar_id_idx` UNIQUE(`polar_subscription_id`)
 );
@@ -94,7 +94,7 @@ CREATE TABLE `suggestions` (
 	`recommended_fix` text NOT NULL,
 	`priority` enum('critical','high','medium','low') NOT NULL,
 	`is_applied` boolean NOT NULL DEFAULT false,
-	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `suggestions_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -104,7 +104,7 @@ CREATE TABLE `usage_logs` (
 	`action` enum('profile_scan','suggestion_generated','rewrite_generated','report_exported') NOT NULL,
 	`credits_consumed` int NOT NULL DEFAULT 1,
 	`metadata` json,
-	`timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`timestamp` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `usage_logs_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
