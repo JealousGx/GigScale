@@ -1,29 +1,25 @@
 import "server-only";
 
-export * from "./schema";
-
-import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import { connect, type Connection } from "@tidbcloud/serverless";
+import {
+  drizzle,
+  type TiDBServerlessDatabase,
+} from "drizzle-orm/tidb-serverless";
 
 import { env } from "@/lib/env";
 
-import * as schema from "./schema";
-
-export type DB = MySql2Database<typeof schema>;
+export type DB = TiDBServerlessDatabase<Record<string, never>> & {
+  $client: Connection;
+};
 
 let _db: DB | undefined;
 
 export function getDb(): DB {
   if (!_db) {
-    const pool = mysql.createPool({
-      uri: env.DATABASE_URL,
-      ssl: {
-        minVersion: "TLSv1.2",
-        rejectUnauthorized: true,
-      },
-      connectionLimit: 5,
+    const client = connect({
+      url: env.DATABASE_URL,
     });
-    _db = drizzle(pool, { schema, mode: "default" });
+    _db = drizzle(client);
   }
   return _db;
 }
