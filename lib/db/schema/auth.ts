@@ -29,7 +29,9 @@ export const sessions = mysqlTable(
     id: varchar("id", { length: 48 }).primaryKey(),
     expiresAt: timestamp("expires_at", { fsp: 3 }).notNull(),
     token: varchar("token", { length: 255 }).notNull().unique(),
-    createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { fsp: 3 })
+      .default(sql`CURRENT_TIMESTAMP(3)`)
+      .notNull(),
     updatedAt: timestamp("updated_at", { fsp: 3 })
       .$onUpdate(() => new Date())
       .notNull(),
