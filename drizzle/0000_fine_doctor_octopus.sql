@@ -10,7 +10,7 @@ CREATE TABLE `accounts` (
 	`refresh_token_expires_at` timestamp(3),
 	`scope` text,
 	`password` text,
-	`created_at` timestamp(3) NOT NULL DEFAULT (now()),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	`updated_at` timestamp(3) NOT NULL,
 	CONSTRAINT `accounts_id` PRIMARY KEY(`id`)
 );
@@ -24,7 +24,7 @@ CREATE TABLE `analyses` (
 	`trust_score` decimal(5,2) NOT NULL DEFAULT '0',
 	`completeness_score` decimal(5,2) NOT NULL DEFAULT '0',
 	`summary` text,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `analyses_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -41,8 +41,8 @@ CREATE TABLE `profiles` (
 	`profile_age_years` decimal(4,1) NOT NULL DEFAULT '0',
 	`crawl_meta` json,
 	`last_scanned_at` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
-	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `profiles_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -53,7 +53,7 @@ CREATE TABLE `rewrites` (
 	`mode` enum('seo_optimization','conversion_optimization','premium_client_targeting','clarity_improvement') NOT NULL,
 	`original_text` text NOT NULL,
 	`rewritten_text` text NOT NULL,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `rewrites_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -61,7 +61,7 @@ CREATE TABLE `sessions` (
 	`id` varchar(48) NOT NULL,
 	`expires_at` timestamp(3) NOT NULL,
 	`token` varchar(255) NOT NULL,
-	`created_at` timestamp(3) NOT NULL DEFAULT (now()),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	`updated_at` timestamp(3) NOT NULL,
 	`ip_address` text,
 	`user_agent` text,
@@ -80,8 +80,8 @@ CREATE TABLE `subscriptions` (
 	`polar_subscription_id` varchar(255),
 	`current_period_start` timestamp,
 	`current_period_end` timestamp,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
-	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	CONSTRAINT `subscriptions_id` PRIMARY KEY(`id`),
 	CONSTRAINT `subscriptions_polar_id_idx` UNIQUE(`polar_subscription_id`)
 );
@@ -94,7 +94,7 @@ CREATE TABLE `suggestions` (
 	`recommended_fix` text NOT NULL,
 	`priority` enum('critical','high','medium','low') NOT NULL,
 	`is_applied` boolean NOT NULL DEFAULT false,
-	`created_at` timestamp NOT NULL DEFAULT (now()),
+	`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `suggestions_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -104,7 +104,7 @@ CREATE TABLE `usage_logs` (
 	`action` enum('profile_scan','suggestion_generated','rewrite_generated','report_exported') NOT NULL,
 	`credits_consumed` int NOT NULL DEFAULT 1,
 	`metadata` json,
-	`timestamp` timestamp NOT NULL DEFAULT (now()),
+	`timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `usage_logs_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
@@ -114,8 +114,8 @@ CREATE TABLE `users` (
 	`email` varchar(255) NOT NULL,
 	`email_verified` boolean NOT NULL DEFAULT false,
 	`image` text,
-	`created_at` timestamp(3) NOT NULL DEFAULT (now()),
-	`updated_at` timestamp(3) NOT NULL DEFAULT (now()),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `users_id` PRIMARY KEY(`id`),
 	CONSTRAINT `users_email_unique` UNIQUE(`email`)
 );
@@ -125,8 +125,8 @@ CREATE TABLE `verifications` (
 	`identifier` varchar(255) NOT NULL,
 	`value` text NOT NULL,
 	`expires_at` timestamp(3) NOT NULL,
-	`created_at` timestamp(3) NOT NULL DEFAULT (now()),
-	`updated_at` timestamp(3) NOT NULL DEFAULT (now()),
+	`created_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+	`updated_at` timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 	CONSTRAINT `verifications_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
