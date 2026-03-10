@@ -1,5 +1,7 @@
 "use client";
 
+
+import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   CreditCard,
@@ -16,15 +18,14 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
 import { FeedbackButton } from "@/components/shared/FeedbackButton";
+import { ProfileSwitcher } from "@/components/shared/ProfileSwitcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 
 import { dashboardNav } from "@/config/navigation";
 
-import { useQueryClient } from "@tanstack/react-query";
-
 import { signOut, useSession } from "@/lib/auth/client";
-import { useCreditsStore } from "@/lib/stores";
+import { useActiveProfileStore, useCreditsStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, LucideIcon> = {
@@ -44,6 +45,7 @@ export function Sidebar() {
 
   const queryClient = useQueryClient();
   const setLoaded = useCreditsStore((s) => s.setLoaded);
+  const clearActiveProfile = useActiveProfileStore((s) => s.setProfileId);
   const creditsTotal = useCreditsStore((s) => s.creditsTotal);
   const creditsUsed = useCreditsStore((s) => s.creditsUsed);
   const remaining = Math.max(0, creditsTotal - creditsUsed);
@@ -55,6 +57,7 @@ export function Sidebar() {
       fetchOptions: {
         onSuccess: () => {
           queryClient.clear();
+          clearActiveProfile(null);
           router.replace("/");
         },
       },
@@ -65,6 +68,10 @@ export function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-border/50 bg-sidebar">
       <div className="flex h-16 items-center px-6">
         <BrandLogo size="md" withText />
+      </div>
+
+      <div className="px-3 pt-4">
+        <ProfileSwitcher />
       </div>
 
       <nav className="flex-1 space-y-1 px-3 pt-4">

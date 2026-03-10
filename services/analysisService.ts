@@ -11,9 +11,15 @@ export interface AnalysisHistoryEntry {
   profile: Profile;
 }
 
+export interface ProfileAnalysisResponse {
+  profile: Profile;
+  analysis: Analysis;
+  previousAnalysis: Analysis | null;
+}
+
 export const analysisService = {
   getByProfileId: (profileId: string) =>
-    apiClient.get<Analysis>(`/analyses/${profileId}`),
+    apiClient.get<ProfileAnalysisResponse>(`/analyses/${profileId}`),
 
   getLatest: () =>
     apiClient.get<LatestAnalysisResponse>("/analyses/latest"),

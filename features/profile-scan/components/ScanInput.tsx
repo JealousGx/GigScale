@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Gift, Loader2, Search } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+
 import { useCreditsStore } from "@/lib/stores";
 
 import type { ScanStatus } from "../types/scanTypes";
@@ -33,13 +34,6 @@ export function ScanInput({ onScan, status }: ScanInputProps) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold tracking-tight">Analyze your profile</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Paste your Upwork or Fiverr profile URL to get a detailed analysis
-        </p>
-      </div>
-
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search

@@ -5,15 +5,14 @@ import { AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 
-import { useLatestAnalysis } from "@/features/profile-scan/hooks/useAnalyses";
+import { useActiveProfile } from "@/features/profile-scan/hooks/useActiveProfile";
 import { SuggestionsList } from "@/features/suggestions/components/SuggestionsList";
 import { useSuggestions } from "@/features/suggestions/hooks/useSuggestions";
 import { PRIORITY_CONFIG } from "@/features/suggestions/types/suggestionsTypes";
 
 export default function SuggestionsPage() {
-  const { data: latestData, isLoading: analysisLoading } = useLatestAnalysis();
-  const latestAnalysis = latestData?.analysis ?? null;
-  const analysisId = latestAnalysis?.id;
+  const { analysis, profile, isLoading: profileLoading } = useActiveProfile();
+  const analysisId = analysis?.id;
   const { suggestions, isLoading, error, generateSuggestions } = useSuggestions(analysisId);
 
   const handleGenerate = async () => {
@@ -25,7 +24,7 @@ export default function SuggestionsPage() {
     }
   };
 
-  if (analysisLoading) {
+  if (profileLoading) {
     return (
       <div className="flex items-center justify-center py-24 text-muted-foreground">
         <Loader2 size={24} className="animate-spin" />
@@ -33,7 +32,7 @@ export default function SuggestionsPage() {
     );
   }
 
-  if (!latestAnalysis) {
+  if (!analysis) {
     return (
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-col items-center gap-4 rounded-2xl border border-border/40 bg-muted/5 py-16 text-center">
@@ -58,7 +57,9 @@ export default function SuggestionsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Suggestions</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            AI-powered recommendations to improve your profile performance
+            {profile
+              ? `Recommendations for ${profile.profileTitle}`
+              : "AI-powered recommendations to improve your profile performance"}
           </p>
         </div>
         <Button onClick={handleGenerate} disabled={isLoading} className="rounded-2xl">

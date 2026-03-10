@@ -1,9 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { analysisService } from "@/services";
-import type { AnalysisHistoryEntry, LatestAnalysisResponse } from "@/services/analysisService";
+
 import { queryKeys } from "@/lib/query-keys";
+import { analysisService } from "@/services";
+import type {
+  AnalysisHistoryEntry,
+  LatestAnalysisResponse,
+  ProfileAnalysisResponse,
+} from "@/services/analysisService";
 
 export function useLatestAnalysis() {
   return useQuery<LatestAnalysisResponse>({
@@ -15,9 +20,9 @@ export function useLatestAnalysis() {
 }
 
 export function useAnalysisByProfile(profileId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.analyses.byProfile(profileId!),
-    queryFn: () => analysisService.getByProfileId(profileId!),
+  return useQuery<ProfileAnalysisResponse>({
+    queryKey: queryKeys.analyses.byProfile(profileId as string),
+    queryFn: () => analysisService.getByProfileId(profileId as string),
     staleTime: 5 * 60_000,
     enabled: !!profileId,
     retry: false,

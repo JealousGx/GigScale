@@ -5,7 +5,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { Link } from "@/components/ui/link";
 
-import { useProfiles } from "@/features/profile-scan/hooks/useProfiles";
+import { useActiveProfile } from "@/features/profile-scan/hooks/useActiveProfile";
 import { RewriteEditor } from "@/features/rewrite/components/RewriteEditor";
 import { RewritePreview } from "@/features/rewrite/components/RewritePreview";
 import { useRewrite } from "@/features/rewrite/hooks/useRewrite";
@@ -14,13 +14,11 @@ import type { RewriteMode, RewriteType } from "@/types";
 
 export default function RewritePage() {
   const { generate, result, status, error, reset } = useRewrite();
-  const { data: profiles, isLoading: profilesLoading } = useProfiles();
-
-  const latestProfile = profiles?.[0];
+  const { profileId, profile, isLoading } = useActiveProfile();
 
   const handleGenerate = async (type: RewriteType, originalText: string, mode: RewriteMode) => {
-    if (!latestProfile) return;
-    await generate(latestProfile.id, type, originalText, mode);
+    if (!profileId) return;
+    await generate(profileId, type, originalText, mode);
   };
 
   return (
@@ -33,13 +31,13 @@ export default function RewritePage() {
       </div>
 
       <FeatureGate action="rewrite_generated">
-        {profilesLoading && (
+        {isLoading && (
           <div className="flex items-center justify-center py-12 text-muted-foreground">
             <Loader2 size={20} className="animate-spin" />
           </div>
         )}
 
-        {!profilesLoading && !latestProfile && (
+        {!isLoading && !profile && (
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-border/40 bg-muted/5 py-16 text-center">
             <AlertCircle size={32} className="text-muted-foreground" />
             <div>
@@ -54,10 +52,10 @@ export default function RewritePage() {
           </div>
         )}
 
-        {!profilesLoading && latestProfile && (
+        {!isLoading && profile && (
           <>
             <div className="rounded-xl bg-muted/20 px-4 py-2.5 text-sm text-muted-foreground">
-              Using profile: <span className="font-medium text-foreground">{latestProfile.profileTitle}</span>
+              Using profile: <span className="font-medium text-foreground">{profile.profileTitle}</span>
             </div>
 
             {error && (
