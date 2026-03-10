@@ -1,11 +1,11 @@
 "use client";
 
 import { Clock, ExternalLink, Loader2, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScanInput } from "@/features/profile-scan/components/ScanInput";
-import { ScanResults } from "@/features/profile-scan/components/ScanResults";
 import {
   useAnalysisByProfile,
   useAnalysisHistory,
@@ -13,6 +13,12 @@ import {
 import { useProfileScan } from "@/features/profile-scan/hooks/useProfileScan";
 import { useActiveProfileStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
+
+const ScanResults = dynamic(() =>
+  import("@/features/profile-scan/components/ScanResults").then(
+    (m) => m.ScanResults,
+  ),
+);
 
 export default function AnalyzePage() {
   const { status, result, error, scan, reset } = useProfileScan();

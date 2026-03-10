@@ -16,23 +16,32 @@ import {
   Star,
   Sun,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
 import { BrandLogo } from "@/components/shared/BrandLogo";
-import { FeedbackButton } from "@/components/shared/FeedbackButton";
 import { Button } from "@/components/ui/button";
 import { Link as CustomLink } from "@/components/ui/link";
 
 import { plans } from "@/config/plans";
 import { siteConfig } from "@/config/site";
 
-import { AuthModal } from "@/features/auth/components/AuthModal";
-
 import { useSession } from "@/lib/auth/client";
 import { env } from "@/lib/env";
 import { useThemeStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
+
+const AuthModal = dynamic(
+  () => import("@/features/auth/components/AuthModal").then((m) => m.AuthModal),
+  { ssr: false },
+);
+
+const FeedbackButton = dynamic(
+  () =>
+    import("@/components/shared/FeedbackButton").then((m) => m.FeedbackButton),
+  { ssr: false },
+);
 
 interface Feature {
   icon: LucideIcon;

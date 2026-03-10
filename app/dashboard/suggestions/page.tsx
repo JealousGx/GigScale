@@ -1,14 +1,20 @@
 "use client";
 
 import { AlertCircle, Loader2, Sparkles } from "lucide-react";
+import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
 
 import { useActiveProfile } from "@/features/profile-scan/hooks/useActiveProfile";
-import { SuggestionsList } from "@/features/suggestions/components/SuggestionsList";
 import { useSuggestions } from "@/features/suggestions/hooks/useSuggestions";
 import { PRIORITY_CONFIG } from "@/features/suggestions/types/suggestionsTypes";
+
+const SuggestionsList = dynamic(() =>
+  import("@/features/suggestions/components/SuggestionsList").then(
+    (m) => m.SuggestionsList,
+  ),
+);
 
 export default function SuggestionsPage() {
   const { analysis, profile, isLoading: profileLoading } = useActiveProfile();

@@ -1,16 +1,27 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { Link } from "@/components/ui/link";
 
 import { useActiveProfile } from "@/features/profile-scan/hooks/useActiveProfile";
-import { RewriteEditor } from "@/features/rewrite/components/RewriteEditor";
-import { RewritePreview } from "@/features/rewrite/components/RewritePreview";
 import { useRewrite } from "@/features/rewrite/hooks/useRewrite";
 
 import type { RewriteMode, RewriteType } from "@/types";
+
+const RewriteEditor = dynamic(() =>
+  import("@/features/rewrite/components/RewriteEditor").then(
+    (m) => m.RewriteEditor,
+  ),
+);
+
+const RewritePreview = dynamic(() =>
+  import("@/features/rewrite/components/RewritePreview").then(
+    (m) => m.RewritePreview,
+  ),
+);
 
 export default function RewritePage() {
   const { generate, result, status, error, reset } = useRewrite();
