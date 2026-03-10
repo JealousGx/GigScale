@@ -7,11 +7,11 @@ import {
 } from "drizzle-orm/tidb-serverless";
 
 import { env } from "@/lib/env";
-import { getLocal } from "./local";
+import { getLocal, type LocalDb } from "./local";
 
 export * from "./schema";
 
-export type DB = TiDBServerlessDatabase<Record<string, never>> & {
+type DB = TiDBServerlessDatabase<Record<string, never>> & {
   $client: Connection;
 };
 
@@ -27,10 +27,10 @@ function getTiDB(): DB {
   return _db;
 }
 
-export function getDb() {
+export function getDb(): LocalDb {
   if (process.env.NODE_ENV === "development") {
     return getLocal();
-  } else {
-    return getTiDB();
   }
+  // TiDB serverless is API-compatible with mysql2 for our queries; cast so TS sees one type
+  return getTiDB() as unknown as LocalDb;
 }

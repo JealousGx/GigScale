@@ -5,11 +5,11 @@ import { env } from "@/lib/env";
 
 import * as schema from "./schema";
 
-export type DB = MySql2Database<typeof schema>;
+export type LocalDb = MySql2Database<typeof schema>;
 
-let _db: DB | undefined;
+let _db: LocalDb | undefined;
 
-export function getLocal(): DB {
+export function getLocal(): LocalDb {
   if (!_db) {
     const pool = mysql.createPool(env.DATABASE_URL);
     _db = drizzle(pool, { schema, mode: "default" });
