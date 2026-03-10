@@ -14,7 +14,7 @@ import {
 
 import { ScoreDelta } from "@/components/shared/ScoreDelta";
 import { Link as CustomLink } from "@/components/ui/link";
-import { useLatestAnalysis } from "@/features/profile-scan/hooks/useAnalyses";
+import { useActiveProfile } from "@/features/profile-scan/hooks/useActiveProfile";
 
 import { cn } from "@/lib/utils";
 
@@ -86,16 +86,16 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
-  const { data, isLoading } = useLatestAnalysis();
-  const analysis = data?.analysis ?? null;
-  const previousAnalysis = data?.previousAnalysis ?? null;
+  const { profile, analysis, previousAnalysis, isLoading } = useActiveProfile();
 
   return (
     <div className="space-y-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your profile performance at a glance
+          {profile
+            ? `Viewing ${profile.profileTitle} on ${profile.platform === "upwork" ? "Upwork" : "Fiverr"}`
+            : "Your profile performance at a glance"}
         </p>
       </div>
 
