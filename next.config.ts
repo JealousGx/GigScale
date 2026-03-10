@@ -53,6 +53,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    optimizePackageImports: ["motion", "zod", "better-auth", "radix-ui"],
+  },
   images: {
     remotePatterns: [
       {
