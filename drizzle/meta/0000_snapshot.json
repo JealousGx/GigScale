@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "f850b932-ce84-43bd-aa84-55e31e801744",
+  "id": "a26c1f5b-93ff-453c-b1b1-8d2ea67fef1b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -327,6 +327,13 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'0'"
+        },
+        "crawl_meta": {
+          "name": "crawl_meta",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         },
         "last_scanned_at": {
           "name": "last_scanned_at",

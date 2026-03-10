@@ -39,6 +39,7 @@ CREATE TABLE `profiles` (
 	`review_count` int NOT NULL DEFAULT 0,
 	`portfolio_count` int NOT NULL DEFAULT 0,
 	`profile_age_years` decimal(4,1) NOT NULL DEFAULT '0',
+	`crawl_meta` json,
 	`last_scanned_at` timestamp,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
