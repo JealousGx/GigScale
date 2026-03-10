@@ -7,6 +7,7 @@ import {
 } from "drizzle-orm/tidb-serverless";
 
 import { env } from "@/lib/env";
+import { getLocal } from "./local";
 
 export * from "./schema";
 
@@ -16,7 +17,7 @@ export type DB = TiDBServerlessDatabase<Record<string, never>> & {
 
 let _db: DB | undefined;
 
-export function getDb(): DB {
+function getTiDB(): DB {
   if (!_db) {
     const client = connect({
       url: env.DATABASE_URL,
@@ -24,4 +25,12 @@ export function getDb(): DB {
     _db = drizzle(client);
   }
   return _db;
+}
+
+export function getDb() {
+  if (process.env.NODE_ENV === "development") {
+    return getLocal();
+  } else {
+    return getTiDB();
+  }
 }
