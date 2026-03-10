@@ -15,7 +15,14 @@ let _db: DB | undefined;
 
 export function getDb(): DB {
   if (!_db) {
-    const pool = mysql.createPool(env.DATABASE_URL);
+    const pool = mysql.createPool({
+      uri: env.DATABASE_URL,
+      ssl: {
+        minVersion: "TLSv1.2",
+        rejectUnauthorized: true,
+      },
+      connectionLimit: 5,
+    });
     _db = drizzle(pool, { schema, mode: "default" });
   }
   return _db;
