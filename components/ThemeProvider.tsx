@@ -1,18 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+
+import { setThemeCookie as setThemeCookieAction } from "@/lib/actions/theme";
 import { useThemeStore } from "@/lib/stores";
 
 const STORAGE_KEY = "gigscale-theme";
 
+function getResolvedTheme(theme: "light" | "dark" | "system"): "dark" | "light" {
+  if (theme === "system") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  return theme;
+}
+
 function applyTheme(theme: "light" | "dark" | "system") {
   const root = document.documentElement;
-  if (theme === "system") {
-    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    root.classList.toggle("dark", systemDark);
-  } else {
-    root.classList.toggle("dark", theme === "dark");
-  }
+  const resolved = getResolvedTheme(theme);
+  root.classList.toggle("dark", resolved === "dark");
+  void setThemeCookieAction(resolved);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -39,6 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     (e: MediaQueryListEvent) => {
       if (theme === "system") {
         document.documentElement.classList.toggle("dark", e.matches);
+        void setThemeCookieAction(e.matches ? "dark" : "light");
       }
     },
     [theme],

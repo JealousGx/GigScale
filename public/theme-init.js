@@ -1,1 +1,0 @@
-(function(){try{var t=localStorage.getItem("gigscale-theme");if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme:dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})()

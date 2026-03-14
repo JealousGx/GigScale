@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { CookieConsent } from "@/components/shared/CookieConsent";
@@ -9,12 +10,21 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { siteConfig } from "@/config/site";
 
+import { THEME_COOKIE_NAME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 import "./globals.css";
 
-const figtree = Figtree({ subsets: ["latin"], variable: "--font-sans" });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const figtree = Figtree({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const viewport: Viewport = {
   themeColor: [
@@ -110,16 +120,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeResolved = cookieStore.get(THEME_COOKIE_NAME)?.value;
+  const isDark = themeResolved === "dark";
+
   return (
-    <html lang="en" className={cn("font-sans", figtree.variable)} suppressHydrationWarning>
-      <head>
-        <script src="/theme-init.js" />
-      </head>
+    <html
+      lang="en"
+      className={cn("font-sans", figtree.variable, isDark && "dark")}
+      suppressHydrationWarning
+    >
+      <head />
       <body className={cn(geistMono.variable, "antialiased")}>
         <QueryProvider>
           <ThemeProvider>
