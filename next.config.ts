@@ -54,7 +54,16 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: ["motion", "zod", "better-auth", "radix-ui"],
+    optimizePackageImports: [
+      "motion",
+      "zod",
+      "better-auth",
+      "radix-ui",
+      "lucide-react",
+      "recharts",
+    ],
+    // Inline CSS to reduce render-blocking; improves FCP/LCP (trade-off: no separate CSS cache)
+    inlineCss: true,
   },
   images: {
     remotePatterns: [
