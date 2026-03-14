@@ -150,6 +150,7 @@ export function Sidebar() {
             type="button"
             onClick={handleSignOut}
             className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            aria-label="Sign out"
           >
             <LogOut size={16} strokeWidth={1.5} />
           </button>

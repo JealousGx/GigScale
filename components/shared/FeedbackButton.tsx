@@ -45,6 +45,7 @@ export function FeedbackButton() {
                 setMenuOpen(false);
                 setBugDialogOpen(true);
               }}
+              aria-label="Report a bug or describe an issue"
             >
               <Bug size={16} className="shrink-0 text-destructive" />
               <div>

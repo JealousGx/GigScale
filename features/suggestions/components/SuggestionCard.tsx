@@ -20,6 +20,8 @@ export function SuggestionCard({ suggestion, index }: SuggestionCardProps) {
         type="button"
         onClick={() => setExpanded(!expanded)}
         className="flex w-full items-start gap-4 px-1 py-5 text-left transition-colors hover:bg-muted/10"
+        aria-expanded={expanded}
+        aria-label={expanded ? `Collapse suggestion: ${suggestion.title}` : `Expand suggestion: ${suggestion.title}`}
       >
         <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-xs font-medium text-muted-foreground">
           {index + 1}
