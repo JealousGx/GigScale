@@ -1,0 +1,6 @@
+# Match Next.js 16 default support to avoid legacy polyfills (Array.at, flat, Object.hasOwn, etc.)
+# and reduce "Legacy JavaScript" / unused polyfill bytes in Lighthouse.
+Chrome >= 111
+Edge >= 111
+Firefox >= 111
+Safari >= 16.4
