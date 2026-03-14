@@ -399,9 +399,9 @@ export default function LandingPage() {
                       <span className="text-4xl font-bold tracking-tight">
                         ${plan.price}
                       </span>
-                      <span className="text-sm text-muted-foreground">
+                      {/* <span className="text-sm text-muted-foreground">
                         /{plan.interval}
-                      </span>
+                      </span> */}
                     </>
                   )}
                 </div>
@@ -409,7 +409,7 @@ export default function LandingPage() {
                   <Coins size={14} strokeWidth={1.5} />
                   {plan.isContactSales
                     ? "Custom credit allocation"
-                    : `${plan.creditsPerMonth} credits / month`}
+                    : `${plan.creditsPerMonth} credits`}
                 </div>
                 <div className="mb-8 flex-1 space-y-3">
                   {plan.features.map((f) => (
