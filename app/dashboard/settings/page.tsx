@@ -235,6 +235,7 @@ export default function SettingsPage() {
               type="button"
               onClick={() => fileRef.current?.click()}
               className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-sm transition-transform hover:scale-110"
+              aria-label="Change profile photo"
             >
               <Camera size={12} strokeWidth={2} />
             </button>
@@ -321,6 +322,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setShowCurrentPw(!showCurrentPw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showCurrentPw ? "Hide current password" : "Show current password"}
                 >
                   {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -345,6 +347,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => setShowNewPw(!showNewPw)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showNewPw ? "Hide new password" : "Show new password"}
               >
                 {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
