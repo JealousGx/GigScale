@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   forbidden,
   notFound,
-  ok,
+  okCached,
   serverError,
   unauthorized,
 } from "@/lib/api";
@@ -36,7 +36,7 @@ export async function GET(
       analysis.id,
     );
 
-    return ok({ profile, analysis, previousAnalysis });
+    return okCached({ profile, analysis, previousAnalysis });
   } catch (error) {
     console.error("[GET /api/analyses/:profileId]", error);
     return serverError();

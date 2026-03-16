@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   forbidden,
   notFound,
-  ok,
+  okCached,
   serverError,
   unauthorized,
 } from "@/lib/api";
@@ -29,7 +29,7 @@ export async function GET(
     if (profile.userId !== authed.userId) return forbidden();
 
     const suggestions = await findSuggestionsByAnalysisId(analysisId);
-    return ok(suggestions);
+    return okCached(suggestions);
   } catch (error) {
     console.error("[GET /api/suggestions/:analysisId]", error);
     return serverError();

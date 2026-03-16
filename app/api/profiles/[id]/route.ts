@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   forbidden,
   notFound,
-  ok,
+  okCached,
   serverError,
   unauthorized,
 } from "@/lib/api";
@@ -23,7 +23,7 @@ export async function GET(
     if (!profile) return notFound("Profile not found");
     if (profile.userId !== authed.userId) return forbidden();
 
-    return ok(profile);
+    return okCached(profile);
   } catch (error) {
     console.error("[GET /api/profiles/:id]", error);
     return serverError();

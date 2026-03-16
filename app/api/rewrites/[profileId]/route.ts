@@ -4,7 +4,7 @@ import {
   authenticateRequest,
   forbidden,
   notFound,
-  ok,
+  okCached,
   serverError,
   unauthorized,
 } from "@/lib/api";
@@ -25,7 +25,7 @@ export async function GET(
     if (profile.userId !== authed.userId) return forbidden();
 
     const rewrites = await findRewritesByProfileId(profileId);
-    return ok(rewrites);
+    return okCached(rewrites);
   } catch (error) {
     console.error("[GET /api/rewrites/:profileId]", error);
     return serverError();
