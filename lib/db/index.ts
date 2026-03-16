@@ -28,7 +28,7 @@ function getTiDB(): DB {
 }
 
 export function getDb(): LocalDb {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.ENVIRONMENT === "local") {
     return getLocal();
   }
   // TiDB serverless is API-compatible with mysql2 for our queries; cast so TS sees one type
