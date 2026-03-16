@@ -9,17 +9,18 @@ export default function robots(): MetadataRoute.Robots {
     return {
       rules: {
         userAgent: "*",
-        disallow: "/",
+        allow: "/",
       },
+
+      sitemap: `${base}/sitemap.xml`,
+      host: base,
     };
   }
 
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
+      disallow: "/",
     },
-    sitemap: `${base}/sitemap.xml`,
-    host: base,
   };
 }

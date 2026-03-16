@@ -105,17 +105,6 @@ export const metadata: Metadata = {
 
   robots: isAllowedToIndex()
     ? {
-      index: false,
-      follow: false,
-      googleBot: {
-        index: false,
-        follow: false,
-        "max-video-preview": 0,
-        "max-image-preview": "none",
-        "max-snippet": 0,
-      },
-    }
-    : {
       index: true,
       follow: true,
       googleBot: {
@@ -124,6 +113,16 @@ export const metadata: Metadata = {
         "max-video-preview": -1,
         "max-image-preview": "large",
         "max-snippet": -1,
+      },
+    } : {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+        "max-video-preview": 0,
+        "max-image-preview": "none",
+        "max-snippet": 0,
       },
     },
 
