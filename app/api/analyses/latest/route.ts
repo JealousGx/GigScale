@@ -7,8 +7,9 @@ import {
 } from "@/lib/api";
 import {
   findLatestAnalysisByUserId,
-  findPreviousAnalysisByProfileId,
+  findPreviousAnalysisByUserAndProfileUrl,
 } from "@/lib/db/queries/analyses";
+import { findProfileById } from "@/lib/db/queries/profiles";
 
 export async function GET() {
   try {
@@ -18,10 +19,14 @@ export async function GET() {
     const analysis = await findLatestAnalysisByUserId(authed.userId);
     if (!analysis) return notFound("No analyses found");
 
-    const previousAnalysis = await findPreviousAnalysisByProfileId(
-      analysis.profileId,
-      analysis.id,
-    );
+    const profile = await findProfileById(analysis.profileId);
+    const previousAnalysis = profile
+      ? await findPreviousAnalysisByUserAndProfileUrl(
+          profile.userId,
+          profile.profileUrl,
+          analysis.id,
+        )
+      : null;
 
     return ok({ analysis, previousAnalysis });
   } catch (error) {

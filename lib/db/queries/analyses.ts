@@ -65,6 +65,31 @@ export async function findPreviousAnalysisByProfileId(
   return rows[0] ?? null;
 }
 
+/**
+ * Finds the most recent analysis for the same user + profile URL (e.g. re-scan of same URL).
+ * Used to show improvement vs. previous run when the same profile is analyzed again.
+ */
+export async function findPreviousAnalysisByUserAndProfileUrl(
+  userId: string,
+  profileUrl: string,
+  excludeAnalysisId: string,
+) {
+  const rows = await getDb()
+    .select({ analysis: analyses })
+    .from(analyses)
+    .innerJoin(profiles, eq(analyses.profileId, profiles.id))
+    .where(
+      and(
+        eq(profiles.userId, userId),
+        eq(profiles.profileUrl, profileUrl),
+        ne(analyses.id, excludeAnalysisId),
+      ),
+    )
+    .orderBy(desc(analyses.createdAt))
+    .limit(1);
+  return rows[0]?.analysis ?? null;
+}
+
 export async function findAnalysisHistoryByUserId(userId: string) {
   const rows = await getDb()
     .select({ analysis: analyses, profile: profiles })

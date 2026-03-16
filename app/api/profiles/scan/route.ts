@@ -9,7 +9,7 @@ import {
   parseBody,
   unauthorized,
 } from "@/lib/api";
-import { findPreviousAnalysisByProfileId } from "@/lib/db/queries/analyses";
+import { findPreviousAnalysisByUserAndProfileUrl } from "@/lib/db/queries/analyses";
 import { analyzeProfile } from "@/lib/services/analyzer";
 import { spendCredits } from "@/lib/services/credits";
 
@@ -42,7 +42,11 @@ export async function POST(request: NextRequest) {
     });
 
     const previousAnalysis = analysis
-      ? await findPreviousAnalysisByProfileId(profile!.id, analysis.id)
+      ? await findPreviousAnalysisByUserAndProfileUrl(
+          authed.userId,
+          profileUrl,
+          analysis.id,
+        )
       : null;
 
     return created({ profile, analysis, previousAnalysis });
