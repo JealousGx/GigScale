@@ -1,9 +1,6 @@
 import { env } from "@/lib/env";
 
-const DOMAINS_NOT_ALLOWED_TO_INDEX = [
-  "staging.gigscale.app",
-  "assets.gigscale.app",
-];
+const DOMAINS_ALLOWED_TO_INDEX = ["gigscale.app"];
 
 export const siteConfig = {
   name: "GigScale",
@@ -36,5 +33,5 @@ export const siteConfig = {
 export const isAllowedToIndex = () => {
   const hostname = new URL(siteConfig.url).hostname;
 
-  return !DOMAINS_NOT_ALLOWED_TO_INDEX.includes(hostname);
+  return DOMAINS_ALLOWED_TO_INDEX.includes(hostname);
 };
