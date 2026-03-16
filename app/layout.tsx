@@ -3,12 +3,13 @@ import { Figtree, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { SchemaOrg } from "@/components/seo/SchemaOrg";
 import { CookieConsent } from "@/components/shared/CookieConsent";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import { siteConfig } from "@/config/site";
+import { isAllowedToIndex, siteConfig } from "@/config/site";
 
 import { THEME_COOKIE_NAME } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -102,17 +103,29 @@ export const metadata: Metadata = {
     creator: `@${siteConfig.creator}`,
   },
 
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+  robots: isAllowedToIndex()
+    ? {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+        "max-video-preview": 0,
+        "max-image-preview": "none",
+        "max-snippet": 0,
+      },
+    }
+    : {
       index: true,
       follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
-  },
 
   other: {
     "msapplication-TileColor": "#09090b",
@@ -135,7 +148,9 @@ export default async function RootLayout({
       className={cn("font-sans", figtree.variable, isDark && "dark")}
       suppressHydrationWarning
     >
-      <head />
+      <head>
+        <SchemaOrg metadata={metadata} />
+      </head>
       <body className={cn(geistMono.variable, "antialiased")}>
         <QueryProvider>
           <ThemeProvider>

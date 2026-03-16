@@ -73,6 +73,34 @@ const features: Feature[] = [
   },
 ];
 
+const faqs = [
+  {
+    question: "Which platforms does GigScale support?",
+    answer:
+      "GigScale currently supports freelancer profiles on Upwork and Fiverr. Support for additional marketplaces will be added over time.",
+  },
+  {
+    question: "How deep is the profile analysis?",
+    answer:
+      "GigScale evaluates your profile across visibility, conversion, trust, and completeness signals, then breaks this down into a detailed scorecard with prioritized improvements.",
+  },
+  {
+    question: "Will GigScale rewrite my profile for me?",
+    answer:
+      "Yes. In addition to the score breakdown and suggestions, GigScale generates AI-powered rewrites for your headlines, overviews, and key sections so you can apply improvements quickly.",
+  },
+  {
+    question: "Is my data and profile content secure?",
+    answer:
+      "Your profile data is encrypted in transit and at rest. We only use it to analyze and generate suggestions for your account, and you can request deletion at any time.",
+  },
+  {
+    question: "Do I need a credit card to get started?",
+    answer:
+      "No. You can run an initial profile analysis on the free plan and upgrade later if you need more credits or advanced features.",
+  },
+] as const;
+
 interface LandingBelowFoldProps {
   isAuthenticated: boolean;
   openAuth: (view: "login" | "signup") => void;
@@ -168,6 +196,54 @@ export function LandingBelowFold({
             ))}
           </div>
         </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-y border-border/30 bg-muted/5 py-24">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="mb-10 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              Frequently asked questions
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm text-muted-foreground">
+              Answers to common questions about how GigScale analyzes and
+              improves your freelancer profiles.
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {faqs.map((faq) => (
+              <div
+                key={faq.question}
+                className="rounded-2xl border border-border/40 bg-background/80 p-6 text-left"
+              >
+                <h3 className="text-sm font-semibold">{faq.question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  {faq.answer}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((faq) => ({
+                "@type": "Question",
+                name: faq.question,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.answer,
+                },
+              })),
+            }),
+          }}
+          type="application/ld+json"
+        />
       </section>
 
       {/* Pricing */}
