@@ -11,6 +11,7 @@ import { betterAuth, type GenericEndpointContext } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 
+import { siteConfig } from "@/config/site";
 import { sendAuthOTPEmail } from "@/lib/emails/auth-otp";
 import { env } from "@/lib/env";
 import { polarClient } from "@/lib/polar";
@@ -32,6 +33,7 @@ const OTP_EXPIRATION_SECONDS = 600;
 const ALLOWED_OTP_ATTEMPTS = 5;
 
 export const auth = betterAuth({
+  appName: siteConfig.name,
   database: drizzleAdapter(getDb(), {
     provider: "mysql",
     schema,
@@ -41,7 +43,7 @@ export const auth = betterAuth({
   session: {
     cookieCache: {
       enabled: true,
-      maxAge: 10 * 60, // 10 minutes
+      maxAge: 1 * 60 * 60 * 24, // 1 day in seconds
     },
   },
 
