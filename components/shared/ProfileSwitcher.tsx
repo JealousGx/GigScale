@@ -40,7 +40,7 @@ export function ProfileSwitcher() {
         >
           {PLATFORM_LABELS[active.platform] ?? active.platform}
         </span>
-        <span className="flex-1 truncate font-medium">
+        <span className="flex-1 truncate font-medium" title={getProfileDisplayName(active)}>
           {getProfileDisplayName(active)}
         </span>
         <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
@@ -65,7 +65,9 @@ export function ProfileSwitcher() {
             >
               {PLATFORM_LABELS[p.platform] ?? p.platform}
             </span>
-            <span className="truncate">{getProfileDisplayName(p)}</span>
+            <span className="truncate" title={getProfileDisplayName(p)}>
+              {getProfileDisplayName(p)}
+            </span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

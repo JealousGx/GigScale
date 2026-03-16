@@ -142,7 +142,9 @@ export default function AnalyzePage() {
                     {Math.round(Number(analysis.profileScore))}
                   </span>
                 </div>
-                <p className="line-clamp-1 text-sm font-medium">
+                <p className="line-clamp-1 text-sm font-medium" title={getProfileDisplayName(profile, {
+                  analysisDate: analysis.createdAt,
+                })}>
                   {getProfileDisplayName(profile, {
                     analysisDate: analysis.createdAt,
                   })}
