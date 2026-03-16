@@ -6,6 +6,7 @@ export {
   handleRouteError,
   notFound,
   ok,
+  okCached,
   serverError,
   unauthorized,
 } from "./response";
