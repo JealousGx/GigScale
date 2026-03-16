@@ -12,7 +12,7 @@ import {
 } from "@/features/profile-scan/hooks/useAnalyses";
 import { useProfileScan } from "@/features/profile-scan/hooks/useProfileScan";
 import { useActiveProfileStore } from "@/lib/stores";
-import { cn } from "@/lib/utils";
+import { cn, getProfileDisplayName } from "@/lib/utils";
 
 const ScanResults = dynamic(() =>
   import("@/features/profile-scan/components/ScanResults").then(
@@ -143,7 +143,9 @@ export default function AnalyzePage() {
                   </span>
                 </div>
                 <p className="line-clamp-1 text-sm font-medium">
-                  {profile.profileTitle}
+                  {getProfileDisplayName(profile, {
+                    analysisDate: analysis.createdAt,
+                  })}
                 </p>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">

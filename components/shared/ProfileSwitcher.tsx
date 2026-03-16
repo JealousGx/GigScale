@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useProfiles } from "@/features/profile-scan/hooks/useProfiles";
 import { useActiveProfileStore } from "@/lib/stores";
-import { cn } from "@/lib/utils";
+import { cn, getProfileDisplayName } from "@/lib/utils";
 
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -40,7 +40,9 @@ export function ProfileSwitcher() {
         >
           {PLATFORM_LABELS[active.platform] ?? active.platform}
         </span>
-        <span className="flex-1 truncate font-medium">{active.profileTitle}</span>
+        <span className="flex-1 truncate font-medium">
+          {getProfileDisplayName(active)}
+        </span>
         <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
@@ -63,7 +65,7 @@ export function ProfileSwitcher() {
             >
               {PLATFORM_LABELS[p.platform] ?? p.platform}
             </span>
-            <span className="truncate">{p.profileTitle}</span>
+            <span className="truncate">{getProfileDisplayName(p)}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
