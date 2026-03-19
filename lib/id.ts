@@ -20,6 +20,7 @@ export const ID_PREFIXES = {
   rewrite: "rwt",
   subscription: "sub",
   usageLog: "usg",
+  providerDailyQuota: "pqd",
 } as const;
 
 export function userId() {
@@ -60,4 +61,8 @@ export function subscriptionId() {
 
 export function usageLogId() {
   return prefixedId(ID_PREFIXES.usageLog);
+}
+
+export function providerDailyQuotaId() {
+  return prefixedId(ID_PREFIXES.providerDailyQuota);
 }
