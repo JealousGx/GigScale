@@ -1,15 +1,11 @@
 import "server-only";
 
-import { withTimeout } from "@/lib/utils/timeout";
-
-import { firecrawl } from ".";
-
-const CRAWL_TIMEOUT_MS = 30_000;
+import { getProfileMarkdown, type ProfilePlatform } from "./profile-markdown";
 
 export interface CrawledProfile {
   title: string;
   description: string;
-  platform: "upwork" | "fiverr";
+  platform: ProfilePlatform;
   url: string;
   rawMarkdown: string;
   skills: string[];
@@ -24,15 +20,9 @@ export interface CrawledProfile {
 
 export async function extractProfile(
   url: string,
-  platform: "upwork" | "fiverr",
+  platform: ProfilePlatform,
 ): Promise<CrawledProfile> {
-  const result = await withTimeout(
-    firecrawl.scrape(url, { formats: ["markdown"], waitFor: 3000 }),
-    CRAWL_TIMEOUT_MS,
-    "Profile crawl",
-  );
-
-  const markdown = result.markdown ?? "";
+  const markdown = await getProfileMarkdown(url, platform);
 
   if (!markdown) {
     throw new Error("Failed to crawl profile: no content returned");
@@ -45,13 +35,29 @@ export async function extractProfile(
     url,
     rawMarkdown: markdown,
     skills: extractSkills(markdown),
-    reviewRating: extractNumber(markdown, /(\d+\.\d+)\s*(?:\/\s*5|stars?|rating)/i) ?? 0,
-    reviewCount: extractInt(markdown, /(\d+)\s*(?:reviews?|feedback|ratings?)/i) ?? 0,
-    portfolioCount: extractInt(markdown, /(\d+)\s*(?:portfolio|projects?|works?|gigs?)/i) ?? 0,
-    hourlyRate: extractMatch(markdown, /\$(\d+(?:\.\d{2})?)\s*\/?\s*h(?:ou)?r/i),
-    completedJobs: extractInt(markdown, /(\d+)\s*(?:jobs?|orders?)\s*(?:completed|done|finished)/i),
-    memberSince: extractMatch(markdown, /(?:member\s+since|joined)\s*:?\s*(\w+\s+\d{4})/i),
-    location: extractMatch(markdown, /(?:location|based\s+in|from)\s*:?\s*([A-Z][a-zA-Z\s,]+)/),
+    reviewRating:
+      extractNumber(markdown, /(\d+\.\d+)\s*(?:\/\s*5|stars?|rating)/i) ?? 0,
+    reviewCount:
+      extractInt(markdown, /(\d+)\s*(?:reviews?|feedback|ratings?)/i) ?? 0,
+    portfolioCount:
+      extractInt(markdown, /(\d+)\s*(?:portfolio|projects?|works?|gigs?)/i) ??
+      0,
+    hourlyRate: extractMatch(
+      markdown,
+      /\$(\d+(?:\.\d{2})?)\s*\/?\s*h(?:ou)?r/i,
+    ),
+    completedJobs: extractInt(
+      markdown,
+      /(\d+)\s*(?:jobs?|orders?)\s*(?:completed|done|finished)/i,
+    ),
+    memberSince: extractMatch(
+      markdown,
+      /(?:member\s+since|joined)\s*:?\s*(\w+\s+\d{4})/i,
+    ),
+    location: extractMatch(
+      markdown,
+      /(?:location|based\s+in|from)\s*:?\s*([A-Z][a-zA-Z\s,]+)/,
+    ),
   };
 }
 
