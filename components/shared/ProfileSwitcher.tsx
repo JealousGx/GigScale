@@ -45,7 +45,7 @@ export function ProfileSwitcher() {
         </span>
         <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width)">
+      <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) max-h-80 overflow-auto">
         {profiles.map((p) => (
           <DropdownMenuItem
             key={p.id}
