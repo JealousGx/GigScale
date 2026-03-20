@@ -24,8 +24,21 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # ✅ Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "23"
+          node-version: 23
+          cache: "pnpm"
+
+      # ✅ Enable pnpm (via Corepack)
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
+
       # - name: Deploy to Vercel
       #   id: deploy
       #   env:
@@ -131,7 +144,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "latest"
-          packageManager: pnpm
+          # packageManager: "pnpm"
+          command: deploy --env ${{ github.event.inputs.environment }}
 
       # - name: Clear Cloudflare Cache
       #   if: success()
