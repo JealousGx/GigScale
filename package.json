@@ -57,6 +57,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "wrangler": "^4.75.0",
     "@biomejs/biome": "2.2.0",
     "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4.2.1",

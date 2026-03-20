@@ -9,12 +9,16 @@ import {
   parseBody,
   unauthorized,
 } from "@/lib/api";
-import { findPreviousAnalysisByUserAndProfileUrl } from "@/lib/db/queries/analyses";
-import { analyzeProfile } from "@/lib/services/analyzer";
+import {
+  consumeProviderDailyQuotaOrThrow,
+  ProviderDailyQuotaExceededError,
+} from "@/lib/db/queries/provider-daily-quota";
+import { failScanJob, insertScanJob } from "@/lib/db/queries/scan-jobs";
+import { env } from "@/lib/env";
 import { spendCredits } from "@/lib/services/credits";
 
 const scanSchema = z.object({
-  profileUrl: z.string().url("profileUrl must be a valid URL"),
+  profileUrl: z.url("profileUrl must be a valid URL"),
   platform: z.enum(["upwork", "fiverr"], {
     message: "platform must be 'upwork' or 'fiverr'",
   }),
@@ -35,21 +39,63 @@ export async function POST(request: NextRequest) {
     });
     if (!credits.success) return forbidden(credits.error);
 
-    const { profile, analysis } = await analyzeProfile({
+    // Reserve Cloudflare crawl job quota (5 jobs/day) before enqueuing.
+    const providerId = "cloudflare_browser_rendering";
+    const CLOUDLARE_LIMIT_PER_DAY = 5;
+
+    let cloudflareAllowed = true;
+    let providerUsed: string | null = providerId;
+
+    try {
+      await consumeProviderDailyQuotaOrThrow({
+        provider: providerId,
+        limitPerDay: CLOUDLARE_LIMIT_PER_DAY,
+      });
+    } catch (error) {
+      if (error instanceof ProviderDailyQuotaExceededError) {
+        cloudflareAllowed = false;
+        providerUsed = "firecrawl";
+      } else {
+        throw error;
+      }
+    }
+
+    const { id: jobId } = await insertScanJob({
       userId: authed.userId,
       profileUrl,
       platform,
+      providerUsed,
     });
 
-    const previousAnalysis = analysis
-      ? await findPreviousAnalysisByUserAndProfileUrl(
-          authed.userId,
-          profileUrl,
-          analysis.id,
-        )
-      : null;
+    const webhookUrl = `${env.NEXT_PUBLIC_APP_URL}/api/scan-jobs/${jobId}/complete`;
 
-    return created({ profile, analysis, previousAnalysis });
+    const enqueueResponse = await fetch(
+      env.CLOUDFLARE_WORKER_SCAN_ENQUEUE_URL,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          profileUrl,
+          platform,
+          cloudflareAllowed,
+          webhookUrl,
+        }),
+      },
+    );
+
+    if (!enqueueResponse.ok) {
+      await failScanJob({
+        jobId,
+        errorMessage: `Failed to enqueue worker job (${enqueueResponse.status})`,
+      });
+      return handleRouteError(
+        new Error("Worker enqueue failed"),
+        "[POST /api/profiles/scan]",
+      );
+    }
+
+    return created({ jobId });
   } catch (error) {
     return handleRouteError(error, "[POST /api/profiles/scan]");
   }
