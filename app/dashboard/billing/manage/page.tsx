@@ -10,9 +10,8 @@ import {
   ShieldCheck,
   XCircle,
 } from "lucide-react";
-import { motion } from "motion/react";
 import Link from "next/link";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Link as CustomLink } from "@/components/ui/link";
@@ -20,8 +19,6 @@ import { Link as CustomLink } from "@/components/ui/link";
 import { getPlanById } from "@/config/plans";
 import { authClient } from "@/lib/auth/client";
 import { useCreditsStore } from "@/lib/stores";
-
-const stagger = (i: number) => ({ delay: 0.08 * i, duration: 0.35 });
 
 export default function ManageSubscriptionPage() {
   const plan = useCreditsStore((s) => s.plan);
@@ -65,11 +62,7 @@ export default function ManageSubscriptionPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-10">
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
+      <div>
         <Link
           href="/dashboard/billing"
           className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -85,13 +78,10 @@ export default function ManageSubscriptionPage() {
           View and manage your subscription through Polar&apos;s secure customer
           portal
         </p>
-      </motion.div>
+      </div>
 
-      <motion.div
+      <div
         className="rounded-2xl border border-border/40 bg-muted/5 p-6"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={stagger(1)}
       >
         <div className="flex items-start justify-between">
           <div>
@@ -130,15 +120,11 @@ export default function ManageSubscriptionPage() {
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {isPaid ? (
-        <>
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={stagger(2)}
-          >
+        <React.Fragment>
+          <div>
             <Button
               size="lg"
               className="w-full rounded-xl py-6 text-base"
@@ -156,13 +142,10 @@ export default function ManageSubscriptionPage() {
               You&apos;ll be redirected to Polar&apos;s secure portal to manage
               your subscription
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
+          <div
             className="space-y-3"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={stagger(3)}
           >
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
               What you can do in the portal
@@ -192,25 +175,19 @@ export default function ManageSubscriptionPage() {
                 </button>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
+          <div
             className="flex items-center gap-2.5 text-xs text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={stagger(4)}
           >
             <ShieldCheck size={14} strokeWidth={1.5} />
             Payments are securely processed by Polar. GigScale never stores your
             card details.
-          </motion.div>
-        </>
+          </div>
+        </React.Fragment>
       ) : (
-        <motion.div
+        <div
           className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-border/60 py-12 text-center"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={stagger(2)}
         >
           <div className="flex size-12 items-center justify-center rounded-xl bg-muted/30">
             <CreditCard
@@ -228,7 +205,7 @@ export default function ManageSubscriptionPage() {
           <CustomLink href="/dashboard/billing" className="rounded-xl px-6">
             View Plans
           </CustomLink>
-        </motion.div>
+        </div>
       )}
     </div>
   );
