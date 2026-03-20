@@ -19,7 +19,15 @@ const SuggestionsList = dynamic(() =>
 export default function SuggestionsPage() {
   const { analysis, profile, isLoading: profileLoading } = useActiveProfile();
   const analysisId = analysis?.id;
-  const { suggestions, isLoading, error, generateSuggestions } = useSuggestions(analysisId);
+  const {
+    suggestions,
+    isLoading,
+    error,
+    generateSuggestions,
+    hasMore,
+    isFetchingMore,
+    loadMoreSuggestions,
+  } = useSuggestions(analysisId);
 
   const handleGenerate = async () => {
     if (!analysisId) return;
@@ -104,6 +112,20 @@ export default function SuggestionsPage() {
       )}
 
       <SuggestionsList suggestions={suggestions} isLoading={isLoading} />
+
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            className="rounded-2xl"
+            onClick={() => loadMoreSuggestions()}
+            disabled={isFetchingMore}
+          >
+            {isFetchingMore ? <Loader2 size={16} className="animate-spin" /> : null}
+            {isFetchingMore ? "Loading more..." : "Load more"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

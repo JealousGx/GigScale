@@ -22,7 +22,13 @@ const ScanResults = dynamic(() =>
 
 export default function AnalyzePage() {
   const { status, result, error, scan, reset } = useProfileScan();
-  const { data: history, isLoading: historyLoading } = useAnalysisHistory();
+  const {
+    data: history,
+    isLoading: historyLoading,
+    hasMore: historyHasMore,
+    isLoadingMore: historyLoadingMore,
+    loadMore: loadMoreHistory,
+  } = useAnalysisHistory();
   const setGlobalProfileId = useActiveProfileStore((s) => s.setProfileId);
 
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
@@ -168,6 +174,21 @@ export default function AnalyzePage() {
               </button>
             ))}
           </div>
+          {historyHasMore && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="outline"
+                className="rounded-2xl"
+                onClick={() => loadMoreHistory()}
+                disabled={historyLoadingMore}
+              >
+                {historyLoadingMore ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : null}
+                {historyLoadingMore ? "Loading more..." : "Load more history"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

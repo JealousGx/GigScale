@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -21,7 +21,12 @@ const PLATFORM_LABELS: Record<string, string> = {
 export function ProfileSwitcher() {
   const profileId = useActiveProfileStore((s) => s.profileId);
   const setProfileId = useActiveProfileStore((s) => s.setProfileId);
-  const { data: profiles } = useProfiles();
+  const {
+    data: profiles,
+    hasMore,
+    isFetchingNextPage,
+    loadMore,
+  } = useProfiles();
 
   if (!profiles || profiles.length < 2) return null;
 
@@ -70,6 +75,21 @@ export function ProfileSwitcher() {
             </span>
           </DropdownMenuItem>
         ))}
+        {hasMore && (
+          <div className="px-2 pb-2">
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-border/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              disabled={isFetchingNextPage}
+            >
+              {isFetchingNextPage ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : null}
+              {isFetchingNextPage ? "Loading..." : "Load more profiles"}
+            </button>
+          </div>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
