@@ -37,6 +37,7 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@latest --activate
+          corepack install
           pnpm --version
 
       # - name: Deploy to Vercel
