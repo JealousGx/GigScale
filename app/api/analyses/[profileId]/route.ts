@@ -4,6 +4,7 @@ import {
   authenticateRequest,
   forbidden,
   notFound,
+  ok,
   okCached,
   serverError,
   unauthorized,
@@ -35,6 +36,10 @@ export async function GET(
       profile.profileUrl,
       analysis.id,
     );
+
+    if (!previousAnalysis || !analysis || !profile) {
+      return ok({ profile, analysis, previousAnalysis });
+    }
 
     return okCached({ profile, analysis, previousAnalysis });
   } catch (error) {
