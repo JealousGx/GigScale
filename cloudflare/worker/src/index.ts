@@ -10,6 +10,7 @@ import {
   type CrawledProfile,
   parseProfileMarkdown,
 } from "@/lib/crawler/parse-profile";
+import { assessProfileQuality } from "@/lib/crawler/profile-quality";
 import {
   type ProviderErrorKind,
   ProviderFetchError,
@@ -382,6 +383,15 @@ async function handleScanJob(message: EnqueueMessage, env: Env): Promise<void> {
         profileUrl,
         platform,
       );
+
+      const quality = assessProfileQuality(crawledProfile);
+      if (!quality.isUsable) {
+        throw new ProviderFetchError({
+          providerId: provider.id,
+          kind: "transient_failure",
+          message: `Low quality extraction (score=${quality.score}, reasons=${quality.reasons.join(", ") || "none"})`,
+        });
+      }
       console.log(`[scan:${jobId}] provider=${provider.id} parse:ok`);
 
       const analysis = await analyzeWithGemini({

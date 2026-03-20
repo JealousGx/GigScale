@@ -98,9 +98,146 @@ const PLATFORM_CRITERIA: Record<string, string> = {
 - Linked social accounts for credibility`,
 };
 
+const MAX_TITLE_CHARS = 180;
+const MAX_DESCRIPTION_CHARS = 1800;
+const MAX_SKILLS = 20;
+const MAX_SKILL_CHARS = 40;
+const MAX_EVIDENCE_CHARS = 2600;
+
+function compactWhitespace(input: string): string {
+  return input.replace(/\s+/g, " ").trim();
+}
+
+function sliceSafe(input: string | null | undefined, maxChars: number): string {
+  if (!input) return "";
+  return compactWhitespace(input).slice(0, maxChars);
+}
+
+function extractJsonLdBlocks(raw: string): string[] {
+  const blocks: string[] = [];
+  const re =
+    /<script\b[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+
+  for (const match of raw.matchAll(re)) {
+    const content = (match[1] ?? "").trim();
+    if (!content) continue;
+    blocks.push(content);
+    if (blocks.length >= 3) break;
+  }
+
+  return blocks;
+}
+
+function stripNonEssentialHtml(raw: string): string {
+  let s = raw;
+  // Remove HTML comments first (often huge)
+  s = s.replace(/<!--[\s\S]*?-->/g, "");
+  // Remove low-value chrome
+  s = s.replace(/<head\b[\s\S]*?<\/head>/gi, "");
+  s = s.replace(/<nav\b[\s\S]*?<\/nav>/gi, "");
+  s = s.replace(/<footer\b[\s\S]*?<\/footer>/gi, "");
+
+  // Remove visual clutter
+  s = s.replace(/<svg\b[\s\S]*?<\/svg>/gi, "");
+  s = s.replace(/<svg\b[^>]*\/>/gi, "");
+
+  // Remove styles + scripts (we always separately extract JSON-LD)
+  s = s.replace(/<style\b[\s\S]*?<\/style>/gi, "");
+  s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  s = s.replace(/<script\b[^>]*\/>/gi, "");
+
+  return s;
+}
+
+function buildJsonLdEvidence(raw: string): string | null {
+  const blocks = extractJsonLdBlocks(raw);
+  if (blocks.length === 0) return null;
+
+  let budget = MAX_EVIDENCE_CHARS;
+  const picked: string[] = [];
+
+  for (const block of blocks) {
+    if (budget <= 100) break;
+    const compact = compactWhitespace(block);
+    const clipped = compact.slice(0, Math.min(1500, budget));
+    if (!clipped) continue;
+    picked.push(clipped);
+    budget -= clipped.length + 2;
+  }
+
+  return picked.join("\n\n");
+}
+
+function buildEvidenceContext(rawMarkdown: string): string {
+  const normalized = rawMarkdown.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return "";
+
+  const sections = normalized
+    .split(/\n(?=#{1,6}\s)/g)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const weighted = sections.map((section) => {
+    const headingLine = section.split("\n")[0] ?? "";
+    const heading = headingLine.replace(/^#{1,6}\s*/, "").toLowerCase();
+    let weight = 1;
+
+    if (/(overview|summary|about|description)/i.test(heading)) weight += 4;
+    if (/(skills?|expertise|tech|stack)/i.test(heading)) weight += 4;
+    if (/(portfolio|project|work|case)/i.test(heading)) weight += 3;
+    if (/(review|feedback|rating|testimonial)/i.test(heading)) weight += 3;
+    if (/(experience|employment|history)/i.test(heading)) weight += 2;
+
+    return { section, weight };
+  });
+
+  weighted.sort((a, b) => b.weight - a.weight);
+
+  let budget = MAX_EVIDENCE_CHARS;
+  const picked: string[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of weighted) {
+    if (budget <= 100) break;
+    const compact = compactWhitespace(candidate.section);
+    if (!compact || seen.has(compact)) continue;
+
+    const clipped = compact.slice(0, Math.min(compact.length, 700, budget));
+    if (clipped.length < 60) continue;
+
+    picked.push(clipped);
+    seen.add(compact);
+    budget -= clipped.length + 2;
+  }
+
+  if (picked.length === 0) {
+    return compactWhitespace(normalized).slice(0, MAX_EVIDENCE_CHARS);
+  }
+
+  return picked.join("\n\n");
+}
+
 export function buildAnalysisPrompt(profile: CrawledProfile): string {
   const platformName = profile.platform === "upwork" ? "Upwork" : "Fiverr";
   const criteria = PLATFORM_CRITERIA[profile.platform] ?? PLATFORM_CRITERIA.upwork;
+  const normalizedTitle = sliceSafe(profile.title, MAX_TITLE_CHARS);
+  const normalizedDescription = sliceSafe(
+    profile.description,
+    MAX_DESCRIPTION_CHARS,
+  );
+  const normalizedSkills = profile.skills
+    .map((skill) => sliceSafe(skill, MAX_SKILL_CHARS))
+    .filter(Boolean)
+    .slice(0, MAX_SKILLS);
+  const jsonLdEvidence = buildJsonLdEvidence(profile.rawMarkdown);
+
+  const evidenceLabel = jsonLdEvidence
+    ? "JSON-LD (application/ld+json) Evidence (curated):"
+    : "Ranked Evidence Context (curated):";
+
+  const evidenceContext = jsonLdEvidence
+    ? jsonLdEvidence
+    : buildEvidenceContext(stripNonEssentialHtml(profile.rawMarkdown));
 
   return `You are a world-class freelance profile strategist who has personally optimized over 10,000 profiles on ${platformName}. You understand the platform's search algorithm, client psychology, and exactly what separates top 1% earners from the rest.
 
@@ -132,14 +269,14 @@ Write 3-5 sentences that:
 
 ---
 
-**Profile Title:** ${profile.title}
+**Profile Title:** ${normalizedTitle}
 
 **Platform:** ${platformName}
 
 **Description:**
-${profile.description}
+${normalizedDescription}
 
-**Skills:** ${profile.skills.length > 0 ? profile.skills.join(", ") : "None listed — this is a CRITICAL gap"}
+**Skills:** ${normalizedSkills.length > 0 ? normalizedSkills.join(", ") : "None listed — this is a CRITICAL gap"}
 
 **Reviews:** ${profile.reviewRating}/5 from ${profile.reviewCount} reviews${profile.reviewCount === 0 ? " (new profile — factor this into trust scoring)" : ""}
 
@@ -153,8 +290,8 @@ ${profile.description}
 
 **Location:** ${profile.location ?? "Not listed"}
 
-**Full Profile Content (raw):**
-${profile.rawMarkdown.slice(0, 4000)}
+**${evidenceLabel}**
+${evidenceContext}
 
 ---
 
