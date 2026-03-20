@@ -1,5 +1,5 @@
 name = "gigscale-scan-worker"
-main = "src/index.ts"
+main = "src/worker.ts"
 compatibility_date = "2026-03-20"
 workers_dev = false
 preview_urls = false
