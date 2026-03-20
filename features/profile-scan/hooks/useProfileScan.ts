@@ -40,7 +40,16 @@ export function useProfileScan() {
     queryFn: () => scanService.getScanJob(scanJobId as string),
     enabled: !!scanJobId,
     retry: false,
-    refetchInterval: 2000,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      // Stop polling as soon as we have a terminal outcome.
+      if (!data) return 2000;
+      if (data.status === "error") return false;
+      if (data.status === "completed" && data.profile && data.analysis) {
+        return false;
+      }
+      return 2000;
+    },
   });
 
   useEffect(() => {
@@ -76,9 +85,17 @@ export function useProfileScan() {
     ? "complete"
     : error
       ? "error"
-      : mutation.isPending || jobQuery.isFetching
-        ? "scanning"
-        : "idle";
+      : (() => {
+          const job = jobQuery.data;
+          const jobIsError = job?.status === "error";
+          const jobIsSuccess =
+            job?.status === "completed" && !!job.profile && !!job.analysis;
+          if (mutation.isPending) return "scanning";
+          if (jobIsError) return "error";
+          if (jobIsSuccess) return "idle";
+          if (scanJobId) return "scanning";
+          return "idle";
+        })();
 
   const reset = () => {
     mutation.reset();
