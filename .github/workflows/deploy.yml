@@ -123,7 +123,7 @@ jobs:
 
       - name: Build & Deploy Cloudflare Worker
         if: success()
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@v3
         with:
           workingDirectory: cloudflare/worker
           apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
