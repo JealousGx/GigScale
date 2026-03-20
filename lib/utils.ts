@@ -27,3 +27,15 @@ export function getProfileDisplayName(
   });
   return `${profile.profileTitle} • ${dateStr}, ${timeStr}`;
 }
+
+export function isDefined<T>(value: T | undefined | null): value is T {
+  return (
+    value !== null &&
+    value !== undefined &&
+    (Array.isArray(value)
+      ? value.length > 0
+      : typeof value === "object"
+        ? Object.keys(value).length > 0
+        : true)
+  );
+}
