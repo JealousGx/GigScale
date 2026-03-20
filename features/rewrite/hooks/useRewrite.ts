@@ -1,9 +1,15 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { featureRewriteService } from "../services/rewriteService";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+
 import { queryKeys } from "@/lib/query-keys";
 import type { Rewrite, RewriteMode, RewriteType } from "@/types";
+
+import { featureRewriteService } from "../services/rewriteService";
 import type { RewriteStatus } from "../types/rewriteTypes";
 
 interface GenerateArgs {
@@ -50,10 +56,27 @@ export function useRewrite() {
 }
 
 export function useRewriteHistory(profileId: string | undefined) {
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: queryKeys.rewrites.byProfile(profileId!),
-    queryFn: () => featureRewriteService.getHistory(profileId!),
+    queryFn: ({ pageParam }) =>
+      featureRewriteService.getHistory(profileId!, {
+        cursor: typeof pageParam === "string" ? pageParam : undefined,
+      }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 5 * 60_000,
     enabled: !!profileId,
   });
+
+  const data: Rewrite[] = query.data
+    ? query.data.pages.flatMap((page) => page.items)
+    : [];
+
+  return {
+    ...query,
+    data,
+    hasMore: !!query.hasNextPage,
+    isLoadingMore: query.isFetchingNextPage,
+    loadMore: () => query.fetchNextPage(),
+  };
 }

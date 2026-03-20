@@ -17,6 +17,13 @@ interface ScanJobStatusResponse {
   analysis?: Analysis | null;
 }
 
+export interface ProfilesPageResponse {
+  items: Profile[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  pageSize: number;
+}
+
 export const profileService = {
   scan: (payload: ScanPayload) =>
     apiClient.post<ScanResponse>("/profiles/scan", payload),
@@ -26,5 +33,11 @@ export const profileService = {
 
   getProfile: (id: string) => apiClient.get<Profile>(`/profiles/${id}`),
 
-  getUserProfiles: () => apiClient.get<Profile[]>("/profiles"),
+  getUserProfiles: (options?: { cursor?: string; pageSize?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (options?.cursor) searchParams.set("cursor", options.cursor);
+    if (options?.pageSize) searchParams.set("pageSize", String(options.pageSize));
+    const query = searchParams.toString();
+    return apiClient.get<ProfilesPageResponse>(`/profiles${query ? `?${query}` : ""}`);
+  },
 };

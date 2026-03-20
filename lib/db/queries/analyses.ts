@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, lt, ne, or } from "drizzle-orm";
 import { getDb } from "..";
 import { analyses, profiles } from "../schema";
 
@@ -12,6 +12,8 @@ export async function insertAnalysis(data: {
   trustScore: string;
   completenessScore: string;
   summary?: string;
+  analysisEvidenceContext?: string | null;
+  analysisEvidenceType?: string | null;
 }) {
   const [row] = await getDb().insert(analyses).values(data).$returningId();
   return findAnalysisById(row.id);
@@ -98,4 +100,47 @@ export async function findAnalysisHistoryByUserId(userId: string) {
     .where(eq(profiles.userId, userId))
     .orderBy(desc(analyses.createdAt));
   return rows;
+}
+
+export interface AnalysisHistoryCursor {
+  createdAt: Date;
+  id: string;
+}
+
+export async function findAnalysisHistoryPageByUserId(
+  userId: string,
+  pageSize: number,
+  cursor?: AnalysisHistoryCursor,
+) {
+  const whereCondition = cursor
+    ? and(
+        eq(profiles.userId, userId),
+        or(
+          lt(analyses.createdAt, cursor.createdAt),
+          and(eq(analyses.createdAt, cursor.createdAt), lt(analyses.id, cursor.id)),
+        ),
+      )
+    : eq(profiles.userId, userId);
+
+  const rows = await getDb()
+    .select({ analysis: analyses, profile: profiles })
+    .from(analyses)
+    .innerJoin(profiles, eq(analyses.profileId, profiles.id))
+    .where(whereCondition)
+    .orderBy(desc(analyses.createdAt), desc(analyses.id))
+    .limit(pageSize + 1);
+
+  const hasMore = rows.length > pageSize;
+  const items = hasMore ? rows.slice(0, pageSize) : rows;
+
+  return {
+    items,
+    hasMore,
+    nextCursor: hasMore
+      ? ({
+          createdAt: items[items.length - 1]!.analysis.createdAt,
+          id: items[items.length - 1]!.analysis.id,
+        } as AnalysisHistoryCursor)
+      : null,
+  };
 }

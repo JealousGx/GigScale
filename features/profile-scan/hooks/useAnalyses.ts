@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/query-keys";
 import { analysisService } from "@/services";
@@ -30,9 +30,26 @@ export function useAnalysisByProfile(profileId: string | undefined) {
 }
 
 export function useAnalysisHistory() {
-  return useQuery<AnalysisHistoryEntry[]>({
+  const query = useInfiniteQuery({
     queryKey: queryKeys.analyses.history,
-    queryFn: () => analysisService.getHistory(),
+    queryFn: ({ pageParam }) =>
+      analysisService.getHistory({
+        cursor: typeof pageParam === "string" ? pageParam : undefined,
+      }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 5 * 60_000,
   });
+
+  const data: AnalysisHistoryEntry[] = query.data
+    ? query.data.pages.flatMap((page) => page.items)
+    : [];
+
+  return {
+    ...query,
+    data,
+    hasMore: !!query.hasNextPage,
+    isLoadingMore: query.isFetchingNextPage,
+    loadMore: () => query.fetchNextPage(),
+  };
 }

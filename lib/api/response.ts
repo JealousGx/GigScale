@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { TimeoutError } from "@/lib/utils/timeout";
 
+import { isDefined } from "../utils";
+
 /** Default: 5 min in browser only; no CDN caching (private = user-specific data). */
 const DEFAULT_MAX_AGE = 60 * 5; // 5 minutes
 const DEFAULT_STALE_WHILE_REVALIDATE = 60 * 60 * 24; // 24 hours
@@ -21,7 +23,11 @@ export type CacheOptions = {
 export function okCached<T>(data: T, options: CacheOptions = {}, status = 200) {
   const maxAge = options.maxAge ?? DEFAULT_MAX_AGE;
   const stale = options.staleWhileRevalidate ?? DEFAULT_STALE_WHILE_REVALIDATE;
-  const cacheControl = `private, max-age=${maxAge}, stale-while-revalidate=${stale}`;
+
+  const cacheControl = isDefined(data)
+    ? `private, max-age=${maxAge}, stale-while-revalidate=${stale}`
+    : "no-store";
+
   return NextResponse.json(data, {
     status,
     headers: {

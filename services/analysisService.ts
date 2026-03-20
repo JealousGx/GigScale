@@ -11,6 +11,13 @@ export interface AnalysisHistoryEntry {
   profile: Profile;
 }
 
+export interface AnalysisHistoryPageResponse {
+  items: AnalysisHistoryEntry[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  pageSize: number;
+}
+
 export interface ProfileAnalysisResponse {
   profile: Profile;
   analysis: Analysis;
@@ -24,6 +31,13 @@ export const analysisService = {
   getLatest: () =>
     apiClient.get<LatestAnalysisResponse>("/analyses/latest"),
 
-  getHistory: () =>
-    apiClient.get<AnalysisHistoryEntry[]>("/analyses/history"),
+  getHistory: (options?: { cursor?: string; pageSize?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (options?.cursor) searchParams.set("cursor", options.cursor);
+    if (options?.pageSize) searchParams.set("pageSize", String(options.pageSize));
+    const query = searchParams.toString();
+    return apiClient.get<AnalysisHistoryPageResponse>(
+      `/analyses/history${query ? `?${query}` : ""}`,
+    );
+  },
 };
