@@ -73,7 +73,10 @@ export async function POST(request: NextRequest) {
       env.CLOUDFLARE_WORKER_SCAN_ENQUEUE_URL,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Gigscale-Backend/1.0", // identify the request source for better logging and debugging in Cloudflare Workers
+        },
         body: JSON.stringify({
           jobId,
           profileUrl,
