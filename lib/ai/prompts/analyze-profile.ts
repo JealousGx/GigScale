@@ -217,6 +217,29 @@ function buildEvidenceContext(rawMarkdown: string): string {
   return picked.join("\n\n");
 }
 
+export type AnalysisEvidenceType = "json_ld" | "ranked_html";
+
+export function buildAnalysisPromptWithEvidence(profile: CrawledProfile): {
+  prompt: string;
+  evidenceContext: string;
+  evidenceType: AnalysisEvidenceType;
+} {
+  const jsonLdEvidence = buildJsonLdEvidence(profile.rawMarkdown);
+  const evidenceType: AnalysisEvidenceType = jsonLdEvidence
+    ? "json_ld"
+    : "ranked_html";
+
+  const evidenceContext = jsonLdEvidence
+    ? jsonLdEvidence
+    : buildEvidenceContext(stripNonEssentialHtml(profile.rawMarkdown));
+
+  return {
+    prompt: buildAnalysisPrompt(profile),
+    evidenceContext,
+    evidenceType,
+  };
+}
+
 export function buildAnalysisPrompt(profile: CrawledProfile): string {
   const platformName = profile.platform === "upwork" ? "Upwork" : "Fiverr";
   const criteria = PLATFORM_CRITERIA[profile.platform] ?? PLATFORM_CRITERIA.upwork;

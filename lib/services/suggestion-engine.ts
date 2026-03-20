@@ -1,16 +1,16 @@
 import "server-only";
 
 import { gemini, MODEL } from "@/lib/ai";
-import { withTimeout } from "@/lib/utils/timeout";
 import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
 import {
+  buildSuggestionsPrompt,
+  SUGGESTIONS_RESPONSE_SCHEMA,
   type SuggestionItem,
   type SuggestionsProfileData,
   type SuggestionsResult,
-  SUGGESTIONS_RESPONSE_SCHEMA,
-  buildSuggestionsPrompt,
 } from "@/lib/ai/prompts/generate-suggestions";
 import { insertSuggestions } from "@/lib/db/queries/suggestions";
+import { withTimeout } from "@/lib/utils/timeout";
 
 const VALID_PRIORITIES = new Set(["critical", "high", "medium", "low"]);
 
@@ -18,12 +18,19 @@ interface GenerateSuggestionsInput {
   analysisId: string;
   profile: SuggestionsProfileData;
   analysisScores: ProfileAnalysisResult;
+  analysisEvidenceContext?: string | null;
+  analysisEvidenceType?: string | null;
 }
 
 export async function generateSuggestions(
   input: GenerateSuggestionsInput,
 ): Promise<Awaited<ReturnType<typeof insertSuggestions>>> {
-  const prompt = buildSuggestionsPrompt(input.profile, input.analysisScores);
+  const prompt = buildSuggestionsPrompt(
+    input.profile,
+    input.analysisScores,
+    input.analysisEvidenceContext,
+    input.analysisEvidenceType,
+  );
 
   const response = await withTimeout(
     gemini.models.generateContent({
@@ -58,7 +65,10 @@ export async function generateSuggestions(
   }> = parsed.suggestions
     .filter(
       (s: SuggestionItem) =>
-        s.title && s.description && s.recommendedFix && VALID_PRIORITIES.has(s.priority),
+        s.title &&
+        s.description &&
+        s.recommendedFix &&
+        VALID_PRIORITIES.has(s.priority),
     )
     .map((s: SuggestionItem) => ({
       analysisId: input.analysisId,

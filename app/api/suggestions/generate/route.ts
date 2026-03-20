@@ -75,6 +75,8 @@ export async function POST(request: NextRequest) {
       analysisId,
       profile: profileData,
       analysisScores,
+      analysisEvidenceContext: analysis.analysisEvidenceContext ?? null,
+      analysisEvidenceType: analysis.analysisEvidenceType ?? null,
     });
 
     return created(suggestions);

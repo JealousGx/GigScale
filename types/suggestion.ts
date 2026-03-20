@@ -10,3 +10,10 @@ export interface Suggestion {
   isApplied: boolean;
   createdAt: Date;
 }
+
+export interface SuggestionsPage {
+  items: Suggestion[];
+  hasMore: boolean;
+  nextCursor: string | null;
+  pageSize: number;
+}

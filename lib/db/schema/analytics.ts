@@ -34,6 +34,8 @@ export const analyses = mysqlTable(
       .default("0")
       .notNull(),
     summary: text("summary"),
+    analysisEvidenceContext: text("analysis_evidence_context"),
+    analysisEvidenceType: varchar("analysis_evidence_type", { length: 20 }),
     createdAt: timestamp("created_at", { fsp: 3 })
       .default(sql`CURRENT_TIMESTAMP(3)`)
       .notNull(),

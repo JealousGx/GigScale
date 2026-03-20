@@ -36,6 +36,8 @@ const analysisSchema = z.object({
   trustScore: z.number(),
   completenessScore: z.number(),
   summary: z.string().nullable(),
+  evidenceContext: z.string().nullable().optional(),
+  evidenceType: z.string().nullable().optional(),
 });
 
 const completePayloadSchema = z
@@ -125,6 +127,8 @@ export async function POST(
       trustScore: ai.trustScore.toFixed(2),
       completenessScore: ai.completenessScore.toFixed(2),
       summary: ai.summary ?? undefined,
+      analysisEvidenceContext: ai.evidenceContext ?? null,
+      analysisEvidenceType: ai.evidenceType ?? null,
     });
 
     await completeScanJob({

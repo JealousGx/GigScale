@@ -57,10 +57,16 @@ export interface SuggestionsProfileData {
 export function buildSuggestionsPrompt(
   profile: SuggestionsProfileData,
   analysis: ProfileAnalysisResult,
+  evidenceContext: string | null | undefined,
+  evidenceType: string | null | undefined,
 ): string {
   const platformName = profile.platform === "upwork" ? "Upwork" : "Fiverr";
   const bestPractices = PLATFORM_BEST_PRACTICES[profile.platform] ?? PLATFORM_BEST_PRACTICES.upwork;
   const weakest = getWeakestDimension(analysis);
+  const evidenceLabel =
+    evidenceType === "json_ld"
+      ? "JSON-LD Evidence (curated)"
+      : "Ranked Evidence Context (curated)";
 
   return `You are a premium ${platformName} profile consultant. Generate 6-8 specific, actionable suggestions to improve this freelancer's profile.
 
@@ -69,6 +75,10 @@ Overall: ${analysis.profileScore}/100 | Visibility: ${analysis.visibilityScore}/
 **Weakest: ${weakest.name} (${weakest.score}/100)** — prioritize this.
 
 **Summary:** ${analysis.summary}
+
+## Evidence (for references + quoting)
+**${evidenceLabel}:**
+${evidenceContext ?? "N/A"}
 
 ## ${platformName} Best Practices
 ${bestPractices}

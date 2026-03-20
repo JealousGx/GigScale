@@ -4,8 +4,9 @@ import { gemini, MODEL } from "@/lib/ai";
 import { withTimeout } from "@/lib/utils/timeout";
 import {
   ANALYSIS_RESPONSE_SCHEMA,
-  buildAnalysisPrompt,
+  buildAnalysisPromptWithEvidence,
   type ProfileAnalysisResult,
+  type AnalysisEvidenceType,
 } from "@/lib/ai/prompts/analyze-profile";
 import {
   type CrawledProfile,
@@ -60,6 +61,8 @@ export async function analyzeProfile(
     trustScore: aiResult.trustScore.toFixed(2),
     completenessScore: aiResult.completenessScore.toFixed(2),
     summary: aiResult.summary,
+    analysisEvidenceContext: aiResult.evidenceContext,
+    analysisEvidenceType: aiResult.evidenceType,
   });
 
   if (!analysis) throw new Error("Failed to create analysis");
@@ -69,8 +72,14 @@ export async function analyzeProfile(
 
 async function runAnalysis(
   profile: CrawledProfile,
-): Promise<ProfileAnalysisResult> {
-  const prompt = buildAnalysisPrompt(profile);
+): Promise<
+  ProfileAnalysisResult & {
+    evidenceContext: string;
+    evidenceType: AnalysisEvidenceType;
+  }
+> {
+  const { prompt, evidenceContext, evidenceType } =
+    buildAnalysisPromptWithEvidence(profile);
 
   const response = await withTimeout(
     gemini.models.generateContent({
@@ -99,6 +108,8 @@ async function runAnalysis(
     trustScore: clampScore(parsed.trustScore),
     completenessScore: clampScore(parsed.completenessScore),
     summary: parsed.summary,
+    evidenceContext,
+    evidenceType,
   };
 }
 

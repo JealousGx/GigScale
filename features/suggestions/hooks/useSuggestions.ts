@@ -1,18 +1,27 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { queryKeys } from "@/lib/query-keys";
-import type { Suggestion } from "@/types";
+import type { Suggestion, SuggestionsPage } from "@/types";
 
 import { featureSuggestionsService } from "../services/suggestionsService";
 
 export function useSuggestions(analysisId: string | undefined) {
   const queryClient = useQueryClient();
 
-  const query = useQuery<Suggestion[]>({
+  const query = useInfiniteQuery<SuggestionsPage>({
     queryKey: queryKeys.suggestions.byAnalysis(analysisId!),
-    queryFn: () => featureSuggestionsService.getByAnalysis(analysisId!),
+    queryFn: ({ pageParam }) =>
+      featureSuggestionsService.getByAnalysis(analysisId!, {
+        cursor: typeof pageParam === "string" ? pageParam : undefined,
+      }),
+    initialPageParam: null as string | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 10 * 60_000,
     enabled: !!analysisId,
   });
@@ -27,11 +36,18 @@ export function useSuggestions(analysisId: string | undefined) {
     },
   });
 
+  const suggestions: Suggestion[] = query.data
+    ? query.data.pages.flatMap((page) => page.items)
+    : [];
+
   return {
-    suggestions: query.data ?? [],
+    suggestions,
+    hasMore: !!query.hasNextPage,
+    isFetchingMore: query.isFetchingNextPage,
     isLoading: query.isLoading || generateMutation.isPending,
     error: query.error?.message ?? generateMutation.error?.message ?? null,
     loadSuggestions: () => query.refetch(),
+    loadMoreSuggestions: () => query.fetchNextPage(),
     generateSuggestions: (id: string) => generateMutation.mutateAsync(id),
   };
 }

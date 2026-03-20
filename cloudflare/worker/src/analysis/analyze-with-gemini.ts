@@ -1,12 +1,15 @@
 import { GoogleGenAI } from "@google/genai";
+
 import {
   ANALYSIS_RESPONSE_SCHEMA,
-  buildAnalysisPrompt,
+  type AnalysisEvidenceType,
+  buildAnalysisPromptWithEvidence,
   type ProfileAnalysisResult,
 } from "@/lib/ai/prompts/analyze-profile";
 import type { CrawledProfile } from "@/lib/crawler/parse-profile";
-import { withTimeout, clampScore } from "../utils";
+
 import { MODEL } from "../constants";
+import { clampScore, withTimeout } from "../utils";
 import type { Env } from "../worker-types";
 
 export async function analyzeWithGemini(input: {
@@ -19,11 +22,14 @@ export async function analyzeWithGemini(input: {
   trustScore: number;
   completenessScore: number;
   summary: string | null;
+  evidenceContext: string;
+  evidenceType: AnalysisEvidenceType;
 }> {
   const { env, profile } = input;
 
   const genAI = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-  const prompt = buildAnalysisPrompt(profile);
+  const { prompt, evidenceContext, evidenceType } =
+    buildAnalysisPromptWithEvidence(profile);
 
   const response = await withTimeout(
     genAI.models.generateContent({
@@ -52,6 +58,7 @@ export async function analyzeWithGemini(input: {
     trustScore: clampScore(Number(parsed.trustScore)),
     completenessScore: clampScore(Number(parsed.completenessScore)),
     summary: parsed.summary ?? null,
+    evidenceContext,
+    evidenceType,
   };
 }
-
