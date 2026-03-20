@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 
 import { getDb } from "..";
 import { providerDailyQuota } from "../schema/provider-daily-quota";
@@ -34,6 +34,17 @@ function toUtcDayKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function getAffectedRowsCount(result: unknown): number {
+  // drizzle-mysql2 returns an object similar to mysql2's OkPacket.
+  const anyResult = result as any;
+  return (
+    anyResult?.affectedRows ??
+    anyResult?.rowCount ??
+    anyResult?.changes ??
+    0
+  );
+}
+
 export async function consumeProviderDailyQuotaOrThrow(data: {
   provider: string;
   limitPerDay: number;
@@ -44,8 +55,111 @@ export async function consumeProviderDailyQuotaOrThrow(data: {
 }): Promise<{ dayKey: string; providerUsed: number; limitPerDay: number }> {
   const dayKey = data.dayKey ?? toUtcDayKey(new Date());
 
+  // 1) Try atomic conditional increment on the existing row:
+  //    UPDATE ... WHERE provider_used < limit
+  //    This guarantees no overshoot under concurrency.
+  const conditionalUpdate = await getDb()
+    .update(providerDailyQuota)
+    .set({
+      providerUsed: sql`${providerDailyQuota.providerUsed} + 1`,
+      updatedAt: sql`CURRENT_TIMESTAMP(3)`,
+    })
+    .where(
+      and(
+        eq(providerDailyQuota.provider, data.provider),
+        eq(providerDailyQuota.day, dayKey),
+        lt(providerDailyQuota.providerUsed, data.limitPerDay),
+      ),
+    );
+
+  if (getAffectedRowsCount(conditionalUpdate) > 0) {
+    const [row] = await getDb()
+      .select({ providerUsed: providerDailyQuota.providerUsed })
+      .from(providerDailyQuota)
+      .where(
+        and(
+          eq(providerDailyQuota.provider, data.provider),
+          eq(providerDailyQuota.day, dayKey),
+        ),
+      )
+      .limit(1);
+
+    // This should be impossible if the UPDATE matched an existing row.
+    if (!row) {
+      throw new Error(
+        `Quota row missing after conditional update (provider=${data.provider}, day=${dayKey})`,
+      );
+    }
+
+    return {
+      dayKey,
+      providerUsed: row.providerUsed,
+      limitPerDay: data.limitPerDay,
+    };
+  }
+
+  // 2) If the row doesn't exist yet, attempt INSERT.
+  //    If another concurrent request inserted first, we'll retry the conditional
+  //    UPDATE (still guaranteed to not overshoot because it checks provider_used < limit).
+  try {
+    await getDb().insert(providerDailyQuota).values({
+      provider: data.provider,
+      day: dayKey,
+      providerUsed: 1,
+      updatedAt: new Date(),
+    });
+
+    return {
+      dayKey,
+      providerUsed: 1,
+      limitPerDay: data.limitPerDay,
+    };
+  } catch (err) {
+    // Unique constraint on (provider, day) is expected under concurrency.
+  }
+
+  const conditionalUpdateAfterInsertAttempt = await getDb()
+    .update(providerDailyQuota)
+    .set({
+      providerUsed: sql`${providerDailyQuota.providerUsed} + 1`,
+      updatedAt: sql`CURRENT_TIMESTAMP(3)`,
+    })
+    .where(
+      and(
+        eq(providerDailyQuota.provider, data.provider),
+        eq(providerDailyQuota.day, dayKey),
+        lt(providerDailyQuota.providerUsed, data.limitPerDay),
+      ),
+    );
+
+  if (getAffectedRowsCount(conditionalUpdateAfterInsertAttempt) > 0) {
+    const [row] = await getDb()
+      .select({ providerUsed: providerDailyQuota.providerUsed })
+      .from(providerDailyQuota)
+      .where(
+        and(
+          eq(providerDailyQuota.provider, data.provider),
+          eq(providerDailyQuota.day, dayKey),
+        ),
+      )
+      .limit(1);
+
+    if (!row) {
+      throw new Error(
+        `Quota row missing after conditional retry (provider=${data.provider}, day=${dayKey})`,
+      );
+    }
+
+    return {
+      dayKey,
+      providerUsed: row.providerUsed,
+      limitPerDay: data.limitPerDay,
+    };
+  }
+
+  // 3) Still no conditional update: we are capped. Read current used count for a good error.
   const [row] = await getDb()
-    .select()
+    .select({ providerUsed: providerDailyQuota.providerUsed })
     .from(providerDailyQuota)
     .where(
       and(
@@ -56,40 +170,21 @@ export async function consumeProviderDailyQuotaOrThrow(data: {
     .limit(1);
 
   if (!row) {
-    await getDb().insert(providerDailyQuota).values({
-      provider: data.provider,
-      day: dayKey,
-      providerUsed: 1,
-      updatedAt: new Date(),
-    });
-
-    return { dayKey, providerUsed: 1, limitPerDay: data.limitPerDay };
-  }
-
-  if (row.providerUsed >= data.limitPerDay) {
+    // Extremely rare: treat as exceeded with used=0 so callers can surface a consistent message.
     throw new ProviderDailyQuotaExceededError({
       provider: data.provider,
       day: dayKey,
       limitPerDay: data.limitPerDay,
-      providerUsed: row.providerUsed,
+      providerUsed: 0,
     });
   }
 
-  const nextUsed = row.providerUsed + 1;
-  await getDb()
-    .update(providerDailyQuota)
-    .set({
-      providerUsed: nextUsed,
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(providerDailyQuota.provider, data.provider),
-        eq(providerDailyQuota.day, dayKey),
-      ),
-    );
-
-  return { dayKey, providerUsed: nextUsed, limitPerDay: data.limitPerDay };
+  throw new ProviderDailyQuotaExceededError({
+    provider: data.provider,
+    day: dayKey,
+    limitPerDay: data.limitPerDay,
+    providerUsed: row.providerUsed,
+  });
 }
 
 export async function getProviderDailyQuotaUsage(data: {
