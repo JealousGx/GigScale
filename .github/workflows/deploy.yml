@@ -24,6 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          node-version: "23"
       # - name: Deploy to Vercel
       #   id: deploy
       #   env:
@@ -129,6 +131,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "latest"
+          packageManager: pnpm
 
       # - name: Clear Cloudflare Cache
       #   if: success()
