@@ -149,8 +149,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_KEY }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "latest"
-          # packageManager: "pnpm"
-          command: deploy --env ${{ github.event.inputs.environment }}
+          packageManager: "pnpm"
+          # command: deploy --env ${{ github.event.inputs.environment || 'staging' }}
 
       # - name: Clear Cloudflare Cache
       #   if: success()
