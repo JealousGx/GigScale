@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Bug, Lightbulb, MessageSquare } from "lucide-react";
+import dynamic from "next/dynamic";
+import React, { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { env } from "@/lib/env";
 
-import { BugReportDialog } from "./BugReportDialog";
+const BugReportDialog = dynamic(
+  () => import("./BugReportDialog").then((m) => m.BugReportDialog),
+  { ssr: false },
+);
 
 export function FeedbackButton() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -24,7 +28,7 @@ export function FeedbackButton() {
   }, [menuOpen]);
 
   return (
-    <>
+    <React.Fragment>
       <div className="relative" ref={ref}>
         <Button
           variant="ghost"
@@ -70,7 +74,9 @@ export function FeedbackButton() {
         )}
       </div>
 
-      <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
-    </>
+      {bugDialogOpen && (
+        <BugReportDialog open={bugDialogOpen} onOpenChange={setBugDialogOpen} />
+      )}
+    </React.Fragment>
   );
 }
