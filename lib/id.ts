@@ -9,7 +9,7 @@ export function prefixedId(prefix: string) {
   return `${prefix}_${uuidv7Base64Url()}`;
 }
 
-export const ID_PREFIXES = {
+const ID_PREFIXES = {
   user: "usr",
   session: "ses",
   account: "acc",
@@ -21,6 +21,7 @@ export const ID_PREFIXES = {
   subscription: "sub",
   usageLog: "usg",
   providerDailyQuota: "pqd",
+  scanJob: "sj",
 } as const;
 
 export function userId() {
@@ -65,4 +66,8 @@ export function usageLogId() {
 
 export function providerDailyQuotaId() {
   return prefixedId(ID_PREFIXES.providerDailyQuota);
+}
+
+export function scanJobId() {
+  return prefixedId(ID_PREFIXES.scanJob);
 }

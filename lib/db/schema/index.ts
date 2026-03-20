@@ -5,6 +5,7 @@ export { accounts, sessions, users, verifications } from "./auth";
 export { type ProfileCrawlMeta, profiles } from "./profile";
 export { providerDailyQuota } from "./provider-daily-quota";
 export { rewrites } from "./rewrite";
+export { scanJobs } from "./scan-jobs";
 export { subscriptions } from "./subscription";
 export { suggestions } from "./suggestion";
 export { usageLogs } from "./usage-logs";

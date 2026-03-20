@@ -15,6 +15,13 @@
       "when": 1773943807155,
       "tag": "0001_loose_silvermane",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773950955719,
+      "tag": "0002_spooky_swordsman",
+      "breakpoints": true
     }
   ]
 }

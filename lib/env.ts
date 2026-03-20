@@ -20,6 +20,8 @@ export const env = createEnv({
     R2_BUCKET: z.string().min(1),
     R2_PUBLIC_URL: z.url(),
     FIRECRAWL_API_KEY: z.string().min(1),
+    CLOUDFLARE_WORKER_SCAN_ENQUEUE_URL: z.string().min(1),
+    SCAN_JOBS_WEBHOOK_SECRET: z.string().min(1),
     CLOUDFLARE_BROWSER_RENDERING_ACCOUNT_ID: z.string().min(1),
     CLOUDFLARE_BROWSER_RENDERING_API_TOKEN: z.string().min(1),
     GEMINI_API_KEY: z.string().min(1),
