@@ -1,8 +1,16 @@
 import { profileService } from "@/services";
-import type { ScanFormData, ScanResult } from "../types/scanTypes";
+import type {
+  ScanFormData,
+  ScanJobResponse,
+  ScanJobStatusResponse,
+} from "../types/scanTypes";
 
 export const scanService = {
-  scan: async (data: ScanFormData): Promise<ScanResult> => {
+  scan: async (data: ScanFormData): Promise<ScanJobResponse> => {
     return profileService.scan(data);
+  },
+
+  getScanJob: async (jobId: string): Promise<ScanJobStatusResponse> => {
+    return profileService.getScanJob(jobId);
   },
 };

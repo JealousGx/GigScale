@@ -1,9 +1,11 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { featureSuggestionsService } from "../services/suggestionsService";
+
 import { queryKeys } from "@/lib/query-keys";
 import type { Suggestion } from "@/types";
+
+import { featureSuggestionsService } from "../services/suggestionsService";
 
 export function useSuggestions(analysisId: string | undefined) {
   const queryClient = useQueryClient();
@@ -28,8 +30,7 @@ export function useSuggestions(analysisId: string | undefined) {
   return {
     suggestions: query.data ?? [],
     isLoading: query.isLoading || generateMutation.isPending,
-    error:
-      query.error?.message ?? generateMutation.error?.message ?? null,
+    error: query.error?.message ?? generateMutation.error?.message ?? null,
     loadSuggestions: () => query.refetch(),
     generateSuggestions: (id: string) => generateMutation.mutateAsync(id),
   };

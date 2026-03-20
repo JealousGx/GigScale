@@ -1,5 +1,5 @@
+import type { Analysis, Platform, Profile } from "@/types";
 import { apiClient } from "./apiClient";
-import type { Platform, Profile, Analysis } from "@/types";
 
 interface ScanPayload {
   profileUrl: string;
@@ -7,17 +7,24 @@ interface ScanPayload {
 }
 
 interface ScanResponse {
-  profile: Profile;
-  analysis: Analysis;
+  jobId: string;
+}
+
+interface ScanJobStatusResponse {
+  status: "queued" | "running" | "completed" | "error";
+  errorMessage?: string | null;
+  profile?: Profile | null;
+  analysis?: Analysis | null;
 }
 
 export const profileService = {
   scan: (payload: ScanPayload) =>
     apiClient.post<ScanResponse>("/profiles/scan", payload),
 
-  getProfile: (id: string) =>
-    apiClient.get<Profile>(`/profiles/${id}`),
+  getScanJob: (jobId: string) =>
+    apiClient.get<ScanJobStatusResponse>(`/scan-jobs/${jobId}`),
 
-  getUserProfiles: () =>
-    apiClient.get<Profile[]>("/profiles"),
+  getProfile: (id: string) => apiClient.get<Profile>(`/profiles/${id}`),
+
+  getUserProfiles: () => apiClient.get<Profile[]>("/profiles"),
 };
