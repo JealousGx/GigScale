@@ -87,6 +87,11 @@ export async function POST(request: NextRequest) {
       },
     );
 
+    console.log(`Enqueue response for job ${jobId}:`, {
+      status: enqueueResponse.status,
+      statusText: enqueueResponse.statusText,
+    });
+
     if (!enqueueResponse.ok) {
       await failScanJob({
         jobId,

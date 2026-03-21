@@ -7,6 +7,7 @@ export {
   notFound,
   ok,
   okCached,
+  okPrivateNoStore,
   serverError,
   unauthorized,
 } from "./response";

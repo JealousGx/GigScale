@@ -1,9 +1,44 @@
 import "server-only";
 
-import { eq } from "drizzle-orm";
-
+import { and, eq, sql } from "drizzle-orm";
+import type { ResultSetHeader } from "mysql2/promise";
 import { getDb } from "..";
+import type { LocalDb } from "../local";
 import { subscriptions } from "../schema";
+
+function affectedRowsFromUpdate(result: unknown): number {
+  if (!Array.isArray(result) || !result[0]) return 0;
+  const header = result[0] as ResultSetHeader;
+  return typeof header.affectedRows === "number" ? header.affectedRows : 0;
+}
+
+type DbExecutor =
+  | LocalDb
+  | Parameters<Parameters<LocalDb["transaction"]>[0]>[0];
+
+/**
+ * Atomically increments credits_used only if credits_total - credits_used >= cost.
+ * Pass `tx` from `getDb().transaction(...)` to pair with `insertUsageLog` in one commit.
+ */
+export async function incrementCreditsUsedIfAffordable(
+  userId: string,
+  cost: number,
+  db: DbExecutor = getDb(),
+): Promise<number> {
+  const result = await db
+    .update(subscriptions)
+    .set({
+      creditsUsed: sql`${subscriptions.creditsUsed} + ${cost}`,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(subscriptions.userId, userId),
+        sql`(${subscriptions.creditsTotal} - ${subscriptions.creditsUsed}) >= ${cost}`,
+      ),
+    );
+  return affectedRowsFromUpdate(result);
+}
 
 export async function findSubscriptionByUserId(userId: string) {
   const rows = await getDb()

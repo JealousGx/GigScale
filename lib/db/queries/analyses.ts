@@ -38,15 +38,25 @@ export async function findLatestAnalysisByProfileId(profileId: string) {
   return rows[0] ?? null;
 }
 
-export async function findLatestAnalysisByUserId(userId: string) {
+export async function findAnalysisWithProfileByAnalysisId(analysisId: string) {
   const rows = await getDb()
-    .select({ analysis: analyses })
+    .select({ analysis: analyses, profile: profiles })
+    .from(analyses)
+    .innerJoin(profiles, eq(analyses.profileId, profiles.id))
+    .where(eq(analyses.id, analysisId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function findLatestAnalysisWithProfileByUserId(userId: string) {
+  const rows = await getDb()
+    .select({ analysis: analyses, profile: profiles })
     .from(analyses)
     .innerJoin(profiles, eq(analyses.profileId, profiles.id))
     .where(eq(profiles.userId, userId))
     .orderBy(desc(analyses.createdAt))
     .limit(1);
-  return rows[0]?.analysis ?? null;
+  return rows[0] ?? null;
 }
 
 export async function findPreviousAnalysisByProfileId(
@@ -56,12 +66,7 @@ export async function findPreviousAnalysisByProfileId(
   const rows = await getDb()
     .select()
     .from(analyses)
-    .where(
-      and(
-        eq(analyses.profileId, profileId),
-        ne(analyses.id, excludeId),
-      ),
-    )
+    .where(and(eq(analyses.profileId, profileId), ne(analyses.id, excludeId)))
     .orderBy(desc(analyses.createdAt))
     .limit(1);
   return rows[0] ?? null;
@@ -117,7 +122,10 @@ export async function findAnalysisHistoryPageByUserId(
         eq(profiles.userId, userId),
         or(
           lt(analyses.createdAt, cursor.createdAt),
-          and(eq(analyses.createdAt, cursor.createdAt), lt(analyses.id, cursor.id)),
+          and(
+            eq(analyses.createdAt, cursor.createdAt),
+            lt(analyses.id, cursor.id),
+          ),
         ),
       )
     : eq(profiles.userId, userId);
@@ -132,15 +140,17 @@ export async function findAnalysisHistoryPageByUserId(
 
   const hasMore = rows.length > pageSize;
   const items = hasMore ? rows.slice(0, pageSize) : rows;
+  const last = items.at(-1);
 
   return {
     items,
     hasMore,
-    nextCursor: hasMore
-      ? ({
-          createdAt: items[items.length - 1]!.analysis.createdAt,
-          id: items[items.length - 1]!.analysis.id,
-        } as AnalysisHistoryCursor)
-      : null,
+    nextCursor:
+      hasMore && last
+        ? ({
+            createdAt: last.analysis.createdAt,
+            id: last.analysis.id,
+          } as AnalysisHistoryCursor)
+        : null,
   };
 }

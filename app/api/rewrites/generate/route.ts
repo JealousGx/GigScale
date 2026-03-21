@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
+import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
 import {
   authenticateRequest,
   created,
@@ -10,7 +11,6 @@ import {
   parseBody,
   unauthorized,
 } from "@/lib/api";
-import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
 import { findLatestAnalysisByProfileId } from "@/lib/db/queries/analyses";
 import { findProfileById } from "@/lib/db/queries/profiles";
 import { spendCredits } from "@/lib/services/credits";
@@ -46,14 +46,15 @@ export async function POST(request: NextRequest) {
     if (!profile) return notFound("Profile not found");
     if (profile.userId !== authed.userId) return forbidden();
 
-    const credits = await spendCredits(authed.userId, "rewrite_generated", {
-      profileId,
-      type,
-      mode,
-    });
+    const [credits, latestAnalysis] = await Promise.all([
+      spendCredits(authed.userId, "rewrite_generated", {
+        profileId,
+        type,
+        mode,
+      }),
+      findLatestAnalysisByProfileId(profileId),
+    ]);
     if (!credits.success) return forbidden(credits.error);
-
-    const latestAnalysis = await findLatestAnalysisByProfileId(profileId);
 
     let analysisScores: ProfileAnalysisResult | null = null;
     if (latestAnalysis) {

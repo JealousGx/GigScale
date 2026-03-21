@@ -10,8 +10,7 @@ import {
   serverError,
   unauthorized,
 } from "@/lib/api";
-import { findAnalysisById } from "@/lib/db/queries/analyses";
-import { findProfileById } from "@/lib/db/queries/profiles";
+import { findAnalysisWithProfileByAnalysisId } from "@/lib/db/queries/analyses";
 import {
   findSuggestionsPageByAnalysisId,
   type SuggestionsCursor,
@@ -53,11 +52,10 @@ export async function GET(
     if (!authed) return unauthorized();
 
     const { analysisId } = await params;
-    const analysis = await findAnalysisById(analysisId);
-    if (!analysis) return notFound("Analysis not found");
+    const row = await findAnalysisWithProfileByAnalysisId(analysisId);
+    if (!row) return notFound("Analysis not found");
 
-    const profile = await findProfileById(analysis.profileId);
-    if (!profile) return notFound("Profile not found");
+    const { profile } = row;
     if (profile.userId !== authed.userId) return forbidden();
 
     const pageSizeParam = request.nextUrl.searchParams.get("pageSize");

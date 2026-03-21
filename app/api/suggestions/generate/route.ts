@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
-
+import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
+import type { SuggestionsProfileData } from "@/lib/ai/prompts/generate-suggestions";
 import {
   authenticateRequest,
   created,
@@ -10,10 +11,7 @@ import {
   parseBody,
   unauthorized,
 } from "@/lib/api";
-import type { ProfileAnalysisResult } from "@/lib/ai/prompts/analyze-profile";
-import type { SuggestionsProfileData } from "@/lib/ai/prompts/generate-suggestions";
-import { findAnalysisById } from "@/lib/db/queries/analyses";
-import { findProfileById } from "@/lib/db/queries/profiles";
+import { findAnalysisWithProfileByAnalysisId } from "@/lib/db/queries/analyses";
 import { spendCredits } from "@/lib/services/credits";
 import { generateSuggestions } from "@/lib/services/suggestion-engine";
 
@@ -30,11 +28,10 @@ export async function POST(request: NextRequest) {
     if ("error" in parsed) return parsed.error;
     const { analysisId } = parsed.data;
 
-    const analysis = await findAnalysisById(analysisId);
-    if (!analysis) return notFound("Analysis not found");
+    const row = await findAnalysisWithProfileByAnalysisId(analysisId);
+    if (!row) return notFound("Analysis not found");
 
-    const profile = await findProfileById(analysis.profileId);
-    if (!profile) return notFound("Profile not found");
+    const { analysis, profile } = row;
     if (profile.userId !== authed.userId) return forbidden();
 
     const credits = await spendCredits(authed.userId, "suggestion_generated", {

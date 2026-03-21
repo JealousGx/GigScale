@@ -1,9 +1,10 @@
 import "server-only";
 
 import { getCreditCost } from "@/config/plans";
+import { getDb } from "@/lib/db";
 import {
   findSubscriptionByUserId,
-  updateSubscription,
+  incrementCreditsUsedIfAffordable,
 } from "@/lib/db/queries/subscriptions";
 import {
   countUserActionUsage,
@@ -38,16 +39,30 @@ export async function checkCredits(
   userId: string,
   action: CreditAction,
 ): Promise<{ hasEnough: boolean; cost: number; remaining: number }> {
-  const freeEligible = await isFirstFreeScan(userId, action);
-  if (freeEligible) return { hasEnough: true, cost: 0, remaining: 0 };
-
   const cost = getCreditCost(action);
-  const subscription = await findSubscriptionByUserId(userId);
 
+  if (action === "profile_scan") {
+    const [pastScans, subscription] = await Promise.all([
+      countUserActionUsage(userId, "profile_scan"),
+      findSubscriptionByUserId(userId),
+    ]);
+    if (pastScans < FREE_SCAN_LIMIT) {
+      return { hasEnough: true, cost: 0, remaining: 0 };
+    }
+    if (!subscription) {
+      return { hasEnough: false, cost, remaining: 0 };
+    }
+    const remaining = Math.max(
+      0,
+      subscription.creditsTotal - subscription.creditsUsed,
+    );
+    return { hasEnough: remaining >= cost, cost, remaining };
+  }
+
+  const subscription = await findSubscriptionByUserId(userId);
   if (!subscription) {
     return { hasEnough: false, cost, remaining: 0 };
   }
-
   const remaining = Math.max(
     0,
     subscription.creditsTotal - subscription.creditsUsed,
@@ -62,45 +77,64 @@ export async function spendCredits(
 ): Promise<SpendResult> {
   const freeEligible = await isFirstFreeScan(userId, action);
   const cost = freeEligible ? 0 : getCreditCost(action);
+
+  if (freeEligible) {
+    await insertUsageLog({
+      userId,
+      action,
+      creditsConsumed: cost,
+      metadata: { ...metadata, freeEligible },
+    });
+    const subscription = await findSubscriptionByUserId(userId);
+    const remaining = subscription
+      ? Math.max(0, subscription.creditsTotal - subscription.creditsUsed)
+      : 0;
+    return { success: true, remaining, wasFree: true };
+  }
+
   const subscription = await findSubscriptionByUserId(userId);
+  if (!subscription) {
+    return {
+      success: false,
+      remaining: 0,
+      error: "No active plan. Please purchase credits to continue.",
+    };
+  }
 
-  if (!freeEligible) {
-    if (!subscription) {
-      return {
-        success: false,
-        remaining: 0,
-        error: "No active plan. Please purchase credits to continue.",
-      };
-    }
-
-    const remaining = Math.max(
-      0,
-      subscription.creditsTotal - subscription.creditsUsed,
-    );
-
-    if (remaining < cost) {
+  try {
+    await getDb().transaction(async (tx) => {
+      const affected = await incrementCreditsUsedIfAffordable(userId, cost, tx);
+      if (affected === 0) {
+        throw new Error("INSUFFICIENT_CREDITS");
+      }
+      await insertUsageLog(
+        {
+          userId,
+          action,
+          creditsConsumed: cost,
+          metadata: { ...metadata, freeEligible },
+        },
+        tx,
+      );
+    });
+  } catch (e) {
+    if (e instanceof Error && e.message === "INSUFFICIENT_CREDITS") {
+      const sub = await findSubscriptionByUserId(userId);
+      const remaining = sub
+        ? Math.max(0, sub.creditsTotal - sub.creditsUsed)
+        : 0;
       return {
         success: false,
         remaining,
         error: `Insufficient credits. Need ${cost}, have ${remaining}.`,
       };
     }
-
-    await updateSubscription(userId, {
-      creditsUsed: subscription.creditsUsed + cost,
-    });
+    throw e;
   }
 
-  await insertUsageLog({
-    userId,
-    action,
-    creditsConsumed: cost,
-    metadata: { ...metadata, freeEligible },
-  });
-
-  const remaining = subscription
-    ? Math.max(0, subscription.creditsTotal - subscription.creditsUsed - cost)
-    : 0;
-
-  return { success: true, remaining, wasFree: freeEligible };
+  const remaining = Math.max(
+    0,
+    subscription.creditsTotal - subscription.creditsUsed - cost,
+  );
+  return { success: true, remaining, wasFree: false };
 }

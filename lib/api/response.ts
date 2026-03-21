@@ -37,6 +37,20 @@ export function okCached<T>(data: T, options: CacheOptions = {}, status = 200) {
   });
 }
 
+/**
+ * Authenticated GET responses that must not be cached (e.g. polling before a terminal state).
+ * Same as omitting Cache-Control for private data, but explicit for intermediaries and HTTP caches.
+ */
+export function okPrivateNoStore<T>(data: T, status = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      "Cache-Control": "private, no-store",
+      Vary: "Cookie",
+    },
+  });
+}
+
 export function ok<T>(data: T, status = 200) {
   return NextResponse.json(data, { status });
 }

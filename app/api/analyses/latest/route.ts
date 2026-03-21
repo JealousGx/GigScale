@@ -6,27 +6,24 @@ import {
   unauthorized,
 } from "@/lib/api";
 import {
-  findLatestAnalysisByUserId,
+  findLatestAnalysisWithProfileByUserId,
   findPreviousAnalysisByUserAndProfileUrl,
 } from "@/lib/db/queries/analyses";
-import { findProfileById } from "@/lib/db/queries/profiles";
 
 export async function GET() {
   try {
     const authed = await authenticateRequest();
     if (!authed) return unauthorized();
 
-    const analysis = await findLatestAnalysisByUserId(authed.userId);
-    if (!analysis) return notFound("No analyses found");
+    const row = await findLatestAnalysisWithProfileByUserId(authed.userId);
+    if (!row) return notFound("No analyses found");
 
-    const profile = await findProfileById(analysis.profileId);
-    const previousAnalysis = profile
-      ? await findPreviousAnalysisByUserAndProfileUrl(
-          profile.userId,
-          profile.profileUrl,
-          analysis.id,
-        )
-      : null;
+    const { analysis, profile } = row;
+    const previousAnalysis = await findPreviousAnalysisByUserAndProfileUrl(
+      profile.userId,
+      profile.profileUrl,
+      analysis.id,
+    );
 
     return ok({ analysis, previousAnalysis });
   } catch (error) {

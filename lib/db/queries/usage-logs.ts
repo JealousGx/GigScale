@@ -2,7 +2,12 @@ import "server-only";
 
 import { and, count, eq } from "drizzle-orm";
 import { getDb } from "..";
+import type { LocalDb } from "../local";
 import { usageLogs } from "../schema";
+
+type DbExecutor =
+  | LocalDb
+  | Parameters<Parameters<LocalDb["transaction"]>[0]>[0];
 
 type UsageAction =
   | "profile_scan"
@@ -10,13 +15,16 @@ type UsageAction =
   | "rewrite_generated"
   | "report_exported";
 
-export async function insertUsageLog(data: {
-  userId: string;
-  action: UsageAction;
-  creditsConsumed: number;
-  metadata?: Record<string, unknown>;
-}) {
-  await getDb().insert(usageLogs).values(data);
+export async function insertUsageLog(
+  data: {
+    userId: string;
+    action: UsageAction;
+    creditsConsumed: number;
+    metadata?: Record<string, unknown>;
+  },
+  db: DbExecutor = getDb(),
+) {
+  await db.insert(usageLogs).values(data);
 }
 
 export async function findUsageLogsByUserId(userId: string) {
@@ -30,8 +38,6 @@ export async function countUserActionUsage(
   const [row] = await getDb()
     .select({ total: count() })
     .from(usageLogs)
-    .where(
-      and(eq(usageLogs.userId, userId), eq(usageLogs.action, action)),
-    );
+    .where(and(eq(usageLogs.userId, userId), eq(usageLogs.action, action)));
   return row?.total ?? 0;
 }

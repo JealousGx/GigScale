@@ -2,13 +2,10 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { badRequest, notFound, ok, serverError } from "@/lib/api";
-import { insertAnalysis } from "@/lib/db/queries/analyses";
-import { insertProfile } from "@/lib/db/queries/profiles";
 import {
-  completeScanJob,
   failScanJob,
   findScanJobById,
-  updateScanJobRunning,
+  runScanCompletionTransaction,
 } from "@/lib/db/queries/scan-jobs";
 import { env } from "@/lib/env";
 
@@ -92,8 +89,6 @@ export async function POST(
       return ok({ status: "error" });
     }
 
-    await updateScanJobRunning({ jobId });
-
     if (!parsed.data.profile || !parsed.data.analysis) {
       return badRequest("Invalid payload: missing profile or analysis");
     }
@@ -101,40 +96,33 @@ export async function POST(
     const crawled = parsed.data.profile;
     const ai = parsed.data.analysis;
 
-    const profile = await insertProfile({
+    await runScanCompletionTransaction({
+      jobId,
       userId: job.userId,
       platform: job.platform,
       profileUrl: job.profileUrl,
-      profileTitle: crawled.title,
-      profileDescription: crawled.description,
-      reviewRating: crawled.reviewRating.toFixed(2),
-      reviewCount: crawled.reviewCount,
-      portfolioCount: crawled.portfolioCount,
-      crawlMeta: {
+      crawled: {
+        title: crawled.title,
+        description: crawled.description,
         skills: crawled.skills,
+        reviewRating: crawled.reviewRating,
+        reviewCount: crawled.reviewCount,
+        portfolioCount: crawled.portfolioCount,
         hourlyRate: crawled.hourlyRate,
         completedJobs: crawled.completedJobs,
         memberSince: crawled.memberSince,
         location: crawled.location,
       },
-    });
-
-    const analysis = await insertAnalysis({
-      profileId: profile.id,
-      profileScore: ai.profileScore.toFixed(2),
-      visibilityScore: ai.visibilityScore.toFixed(2),
-      conversionScore: ai.conversionScore.toFixed(2),
-      trustScore: ai.trustScore.toFixed(2),
-      completenessScore: ai.completenessScore.toFixed(2),
-      summary: ai.summary ?? undefined,
-      analysisEvidenceContext: ai.evidenceContext ?? null,
-      analysisEvidenceType: ai.evidenceType ?? null,
-    });
-
-    await completeScanJob({
-      jobId,
-      profileId: profile.id,
-      analysisId: analysis.id,
+      analysis: {
+        profileScore: ai.profileScore,
+        visibilityScore: ai.visibilityScore,
+        conversionScore: ai.conversionScore,
+        trustScore: ai.trustScore,
+        completenessScore: ai.completenessScore,
+        summary: ai.summary ?? null,
+        evidenceContext: ai.evidenceContext ?? null,
+        evidenceType: ai.evidenceType ?? null,
+      },
     });
 
     return ok({ status: "completed" });

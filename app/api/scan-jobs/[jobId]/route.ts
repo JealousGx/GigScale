@@ -1,7 +1,13 @@
 import type { NextRequest } from "next/server";
 import { z } from "zod";
 
-import { authenticateRequest, notFound, ok, unauthorized } from "@/lib/api";
+import {
+  authenticateRequest,
+  notFound,
+  okCached,
+  okPrivateNoStore,
+  unauthorized,
+} from "@/lib/api";
 import { findAnalysisById } from "@/lib/db/queries/analyses";
 import { findProfileById } from "@/lib/db/queries/profiles";
 import { findScanJobByIdForUser } from "@/lib/db/queries/scan-jobs";
@@ -29,24 +35,27 @@ export async function GET(
     if (!job) return notFound();
 
     if (job.status !== "completed") {
-      return ok({
+      return okPrivateNoStore({
         status: job.status,
         errorMessage: job.errorMessage,
       });
     }
 
-    const profile = job.profileId ? await findProfileById(job.profileId) : null;
-    const analysis = job.analysisId
-      ? await findAnalysisById(job.analysisId)
-      : null;
+    const [profile, analysis] = await Promise.all([
+      job.profileId ? findProfileById(job.profileId) : Promise.resolve(null),
+      job.analysisId ? findAnalysisById(job.analysisId) : Promise.resolve(null),
+    ]);
 
-    return ok({
+    return okCached({
       status: "completed",
       profile,
       analysis,
     });
   } catch {
     // Avoid leaking internal errors to the client polling loop.
-    return ok({ status: "error", errorMessage: "Failed to load scan job" });
+    return okPrivateNoStore({
+      status: "error",
+      errorMessage: "Failed to load scan job",
+    });
   }
 }
