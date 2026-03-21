@@ -9,10 +9,10 @@ on:
       environment:
         description: "Select environment to deploy"
         required: true
-        default: "preview"
+        default: "staging"
         type: choice
         options:
-          - preview
+          - staging
           - production
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       env: ${{ steps.deploy.outputs.env }}
-    environment: ${{ github.event.inputs.environment || 'preview' }}
+    environment: ${{ github.event.inputs.environment || 'staging' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +55,7 @@ jobs:
           ENV="${{ github.event.inputs.environment }}"
 
           if [ -z "$ENV" ]; then
-            ENV="preview"
+            ENV="staging"
           fi
 
           echo "Deploying to environment: $ENV"
