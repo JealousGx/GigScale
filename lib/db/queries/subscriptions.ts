@@ -6,10 +6,25 @@ import { getDb } from "..";
 import type { LocalDb } from "../local";
 import { subscriptions } from "../schema";
 
+/**
+ * mysql2 returns `[ResultSetHeader, FieldPacket[]]`; TiDB serverless returns a
+ * `FullResult` with `rowsAffected`. Drizzle passes through either shape.
+ */
 function affectedRowsFromUpdate(result: unknown): number {
-  if (!Array.isArray(result) || !result[0]) return 0;
-  const header = result[0] as ResultSetHeader;
-  return typeof header.affectedRows === "number" ? header.affectedRows : 0;
+  if (result == null) return 0;
+  if (Array.isArray(result) && result[0]) {
+    const header = result[0] as ResultSetHeader;
+    if (typeof header.affectedRows === "number") return header.affectedRows;
+  }
+  if (typeof result === "object") {
+    const r = result as Record<string, unknown>;
+    const n =
+      (typeof r.rowsAffected === "number" ? r.rowsAffected : undefined) ??
+      (typeof r.affectedRows === "number" ? r.affectedRows : undefined) ??
+      (typeof r.rowCount === "number" ? r.rowCount : undefined);
+    if (typeof n === "number") return n;
+  }
+  return 0;
 }
 
 type DbExecutor =
