@@ -1,31 +1,9 @@
 import "server-only";
 
 import { and, eq, sql } from "drizzle-orm";
-import type { ResultSetHeader } from "mysql2/promise";
-import { getDb } from "..";
+import { getDb, getMutationAffectedRows } from "..";
 import type { LocalDb } from "../local";
 import { subscriptions } from "../schema";
-
-/**
- * mysql2 returns `[ResultSetHeader, FieldPacket[]]`; TiDB serverless returns a
- * `FullResult` with `rowsAffected`. Drizzle passes through either shape.
- */
-function affectedRowsFromUpdate(result: unknown): number {
-  if (result == null) return 0;
-  if (Array.isArray(result) && result[0]) {
-    const header = result[0] as ResultSetHeader;
-    if (typeof header.affectedRows === "number") return header.affectedRows;
-  }
-  if (typeof result === "object") {
-    const r = result as Record<string, unknown>;
-    const n =
-      (typeof r.rowsAffected === "number" ? r.rowsAffected : undefined) ??
-      (typeof r.affectedRows === "number" ? r.affectedRows : undefined) ??
-      (typeof r.rowCount === "number" ? r.rowCount : undefined);
-    if (typeof n === "number") return n;
-  }
-  return 0;
-}
 
 type DbExecutor =
   | LocalDb
@@ -52,7 +30,7 @@ export async function incrementCreditsUsedIfAffordable(
         sql`(${subscriptions.creditsTotal} - ${subscriptions.creditsUsed}) >= ${cost}`,
       ),
     );
-  return affectedRowsFromUpdate(result);
+  return getMutationAffectedRows(result);
 }
 
 export async function findSubscriptionByUserId(userId: string) {
