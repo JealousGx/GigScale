@@ -1,6 +1,6 @@
 import "server-only";
 
-import { connect, type Connection } from "@tidbcloud/serverless";
+import { type Connection, connect } from "@tidbcloud/serverless";
 import {
   drizzle,
   type TiDBServerlessDatabase,
@@ -34,3 +34,5 @@ export function getDb(): LocalDb {
   // TiDB serverless is API-compatible with mysql2 for our queries; cast so TS sees one type
   return getTiDB() as unknown as LocalDb;
 }
+
+export { getMutationAffectedRows } from "./mutation-result";
