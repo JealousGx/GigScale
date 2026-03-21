@@ -143,6 +143,37 @@ jobs:
           echo "Timeout exceeded waiting for deployment to be ready."
           exit 1
 
+      - name: Alias Staging Domain to Deployment
+        if: success() && steps.deploy.outputs.env == 'staging'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
+        run: |
+          DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment_id }}"
+
+          if [ -z "$STAGING_DOMAIN" ]; then
+            echo "STAGING_DOMAIN is missing"
+            exit 1
+          fi
+
+          echo "Aliasing $STAGING_DOMAIN to deployment $DEPLOYMENT_ID"
+
+          RESPONSE=$(curl -s -X POST "https://api.vercel.com/v2/deployments/$DEPLOYMENT_ID/aliases" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"alias\": \"${STAGING_DOMAIN}\"}")
+
+          echo "Alias response: $RESPONSE"
+
+          ERROR_CODE=$(echo "$RESPONSE" | jq -r '.error.code // empty')
+
+          if [ -n "$ERROR_CODE" ]; then
+            echo "Alias failed with error: $ERROR_CODE"
+            exit 1
+          fi
+
+          echo "Alias set successfully!"
+
       - name: Build & Deploy Cloudflare Worker
         if: success()
         uses: cloudflare/wrangler-action@v3
