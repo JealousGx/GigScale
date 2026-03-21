@@ -77,7 +77,7 @@ jobs:
             --arg sha "$GIT_SHA" \
             --argjson repoId "$VERCEL_REPO_ID" \
             '{name: $name, gitSource: {type: $type, ref: $ref, sha: $sha, repoId: $repoId}}
-            + (if $env == "production" then { target: $target } else {} end)
+            + (if $target == "production" then { target: $target } else {} end)
             ')
 
           echo "Payload: $PAYLOAD"
