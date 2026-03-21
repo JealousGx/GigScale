@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, eq, lt, sql } from "drizzle-orm";
 
-import { getDb } from "..";
+import { getDb, getMutationAffectedRows } from "..";
 import { providerDailyQuota } from "../schema/provider-daily-quota";
 
 export class ProviderDailyQuotaExceededError extends Error {
@@ -34,17 +34,6 @@ function toUtcDayKey(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function getAffectedRowsCount(result: unknown): number {
-  // drizzle-mysql2 returns an object similar to mysql2's OkPacket.
-  const anyResult = result as any;
-  return (
-    anyResult?.affectedRows ??
-    anyResult?.rowCount ??
-    anyResult?.changes ??
-    0
-  );
-}
-
 export async function consumeProviderDailyQuotaOrThrow(data: {
   provider: string;
   limitPerDay: number;
@@ -72,7 +61,7 @@ export async function consumeProviderDailyQuotaOrThrow(data: {
       ),
     );
 
-  if (getAffectedRowsCount(conditionalUpdate) > 0) {
+  if (getMutationAffectedRows(conditionalUpdate) > 0) {
     const [row] = await getDb()
       .select({ providerUsed: providerDailyQuota.providerUsed })
       .from(providerDailyQuota)
@@ -114,7 +103,7 @@ export async function consumeProviderDailyQuotaOrThrow(data: {
       providerUsed: 1,
       limitPerDay: data.limitPerDay,
     };
-  } catch (err) {
+  } catch {
     // Unique constraint on (provider, day) is expected under concurrency.
   }
 
@@ -132,7 +121,7 @@ export async function consumeProviderDailyQuotaOrThrow(data: {
       ),
     );
 
-  if (getAffectedRowsCount(conditionalUpdateAfterInsertAttempt) > 0) {
+  if (getMutationAffectedRows(conditionalUpdateAfterInsertAttempt) > 0) {
     const [row] = await getDb()
       .select({ providerUsed: providerDailyQuota.providerUsed })
       .from(providerDailyQuota)
