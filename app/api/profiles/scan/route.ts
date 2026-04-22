@@ -75,7 +75,6 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "User-Agent": "Gigscale-Backend/1.0", // identify the request source for better logging and debugging in Cloudflare Workers
         },
         body: JSON.stringify({
           jobId,

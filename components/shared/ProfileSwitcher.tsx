@@ -12,7 +12,6 @@ import { useProfiles } from "@/features/profile-scan/hooks/useProfiles";
 import { useActiveProfileStore } from "@/lib/stores";
 import { cn, getProfileDisplayName } from "@/lib/utils";
 
-
 const PLATFORM_LABELS: Record<string, string> = {
   upwork: "Upwork",
   fiverr: "Fiverr",
@@ -45,12 +44,18 @@ export function ProfileSwitcher() {
         >
           {PLATFORM_LABELS[active.platform] ?? active.platform}
         </span>
-        <span className="flex-1 truncate font-medium" title={getProfileDisplayName(active)}>
+        <span
+          className="flex-1 truncate font-medium"
+          title={getProfileDisplayName(active)}
+        >
           {getProfileDisplayName(active)}
         </span>
         <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-(--radix-dropdown-menu-trigger-width) max-h-80 overflow-auto">
+      <DropdownMenuContent
+        align="start"
+        className="w-(--radix-dropdown-menu-trigger-width) max-h-80 overflow-auto"
+      >
         {profiles.map((p) => (
           <DropdownMenuItem
             key={p.id}
@@ -79,6 +84,7 @@ export function ProfileSwitcher() {
           <div className="px-2 pb-2">
             <button
               type="button"
+              onPointerDown={(e) => e.preventDefault()}
               onClick={() => void loadMore()}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-border/50 px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               disabled={isFetchingNextPage}
