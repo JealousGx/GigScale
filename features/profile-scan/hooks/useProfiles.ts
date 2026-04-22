@@ -14,7 +14,8 @@ export function useProfiles() {
         cursor: typeof pageParam === "string" ? pageParam : undefined,
       }),
     initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.hasMore && lastPage.nextCursor ? lastPage.nextCursor : undefined,
     staleTime: 5 * 60_000,
   });
 
